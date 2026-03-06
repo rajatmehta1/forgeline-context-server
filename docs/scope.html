@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeLine — Scope & Purpose</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #00c9a7;
+    --danger: #ff5c72;
+    --warn: #ffc847;
+    --text: #e8eaf0;
+    --muted: #8892b0;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  nav { margin-left: auto; display: flex; gap: 1.5rem; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  nav a:hover, nav a.active { color: var(--accent); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  .page-title { font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
+  .page-title span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 1.15rem; margin-bottom: 3rem; }
+
+  h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; color: var(--text); }
+  h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: var(--accent2); }
+  p { color: var(--muted); margin-bottom: 1rem; }
+
+  /* Problem/Solution Split */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .card.bad { border-color: rgba(255,92,114,0.3); }
+  .card.good { border-color: rgba(108,99,255,0.3); }
+  .card-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .card.bad .card-label { color: var(--danger); }
+  .card.good .card-label { color: var(--accent2); }
+  .card ul { list-style: none; padding: 0; }
+  .card ul li { color: var(--muted); padding: 0.3rem 0; font-size: 0.9rem; padding-left: 1.2rem; position: relative; }
+  .card.bad ul li::before { content: '✗'; position: absolute; left: 0; color: var(--danger); }
+  .card.good ul li::before { content: '✓'; position: absolute; left: 0; color: var(--accent2); }
+
+  /* Before/After Diagram */
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  .diagram-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
+
+  /* Feature Grid */
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .feature-card:hover { border-color: var(--accent); }
+  .feature-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+  .feature-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .feature-card p { font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+  /* Scope table */
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+  .scope-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+  .scope-section h4 { font-size: 0.78rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 1rem; }
+  .scope-section.in h4 { color: var(--accent2); }
+  .scope-section.out h4 { color: var(--danger); }
+  .scope-section ul { list-style: none; padding: 0; }
+  .scope-section ul li { font-size: 0.87rem; color: var(--muted); padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+  .scope-section ul li:last-child { border-bottom: none; }
+
+  /* User personas */
+  .personas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .persona {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+  }
+  .persona-avatar { font-size: 2rem; margin-bottom: 0.5rem; }
+  .persona h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .persona p { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+  @media (max-width: 768px) {
+    header { padding: 1.5rem; flex-wrap: wrap; }
+    .split, .feature-grid, .scope-grid, .personas { grid-template-columns: 1fr; }
+    .page-title { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Forge<span>Line</span></div>
+  <nav>
+    <a href="scope.html" class="active">Scope</a>
+    <a href="concepts.html">Concepts</a>
+    <a href="design.html">Design</a>
+    <a href="deploy.html">Deploy</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">Project <span>Scope</span></div>
+  <div class="subtitle">What ForgeLine is, who it serves, and what problem it solves.</div>
+
+  <!-- Problem Statement -->
+  <h2>The Problem</h2>
+  <p>AI coding tools like Cursor, Copilot, and Claude Code generate code without awareness of your team's security rules, architecture boundaries, or existing codebase patterns. This leads to repeated security vulnerabilities, phantom package hallucinations, and code that ignores your existing utilities — creating tech debt faster than humans can review it.</p>
+
+  <div class="split">
+    <div class="card bad">
+      <div class="card-label">Without ForgeLine</div>
+      <ul>
+        <li>AI writes SQL with string concatenation (SQL injection)</li>
+        <li>AI re-invents helpers that already exist in utils/</li>
+        <li>AI imports packages your team hasn't approved</li>
+        <li>AI ignores PII/PHI handling requirements</li>
+        <li>Controllers call database directly, bypassing services</li>
+        <li>No awareness of team naming conventions</li>
+      </ul>
+    </div>
+    <div class="card good">
+      <div class="card-label">With ForgeLine</div>
+      <ul>
+        <li>Security rules injected before every generation</li>
+        <li>Existing functions surfaced — AI reuses, not reinvents</li>
+        <li>Package approval check before any new import</li>
+        <li>PII/PHI/PCI constraints embedded in context</li>
+        <li>Architecture layer boundaries enforced</li>
+        <li>Team conventions included in every prompt</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Before/After Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">Flow Comparison — Before vs After</div>
+    <svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:300px">
+      <defs>
+        <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#ff5c72"/>
+        </marker>
+        <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#6c63ff"/>
+        </marker>
+      </defs>
+
+      <!-- BEFORE -->
+      <text x="200" y="22" text-anchor="middle" fill="#ff5c72" font-size="11" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">BEFORE</text>
+
+      <rect x="50" y="35" width="110" height="44" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="105" y="57" text-anchor="middle" fill="#8892b0" font-size="11" font-family="Segoe UI,sans-serif">Developer</text>
+      <text x="105" y="70" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">types prompt</text>
+
+      <line x1="160" y1="57" x2="225" y2="57" stroke="#ff5c72" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+      <text x="193" y="50" text-anchor="middle" fill="#ff5c72" font-size="9" font-family="Segoe UI,sans-serif">raw prompt</text>
+
+      <rect x="225" y="35" width="110" height="44" rx="8" fill="#22263a" stroke="#ff5c72" stroke-opacity="0.4"/>
+      <text x="280" y="57" text-anchor="middle" fill="#e8eaf0" font-size="11" font-family="Segoe UI,sans-serif">AI Model</text>
+      <text x="280" y="70" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">(no context)</text>
+
+      <line x1="335" y1="57" x2="400" y2="57" stroke="#ff5c72" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+      <text x="367" y="50" text-anchor="middle" fill="#ff5c72" font-size="9" font-family="Segoe UI,sans-serif">bad code</text>
+
+      <rect x="400" y="35" width="110" height="44" rx="8" fill="#22263a" stroke="#ff5c72" stroke-opacity="0.4"/>
+      <text x="455" y="54" text-anchor="middle" fill="#e8eaf0" font-size="11" font-family="Segoe UI,sans-serif">Generated</text>
+      <text x="455" y="67" text-anchor="middle" fill="#ff5c72" font-size="10" font-family="Segoe UI,sans-serif">Code (unsafe)</text>
+
+      <!-- Labels -->
+      <text x="455" y="105" text-anchor="middle" fill="#ff5c72" font-size="9.5" font-family="Segoe UI,sans-serif">SQL injection · phantom packages · layer violations</text>
+
+      <!-- Divider -->
+      <line x1="30" y1="130" x2="870" y2="130" stroke="#2e3350" stroke-width="1" stroke-dasharray="4,4"/>
+
+      <!-- AFTER -->
+      <text x="450" y="155" text-anchor="middle" fill="#6c63ff" font-size="11" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">AFTER — WITH FORGELINE</text>
+
+      <rect x="30" y="168" width="110" height="44" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="85" y="190" text-anchor="middle" fill="#8892b0" font-size="11" font-family="Segoe UI,sans-serif">Developer</text>
+      <text x="85" y="203" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">types prompt</text>
+
+      <line x1="140" y1="190" x2="195" y2="190" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+      <rect x="195" y="160" width="140" height="72" rx="8" fill="#1a1d27" stroke="#6c63ff" stroke-opacity="0.6"/>
+      <text x="265" y="182" text-anchor="middle" fill="#6c63ff" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ForgeLine MCP</text>
+      <text x="265" y="197" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">+ security rules</text>
+      <text x="265" y="210" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">+ existing patterns</text>
+      <text x="265" y="223" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">+ architecture map</text>
+
+      <line x1="335" y1="196" x2="400" y2="196" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+      <text x="367" y="188" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Segoe UI,sans-serif">rich context</text>
+
+      <rect x="400" y="168" width="110" height="44" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="455" y="190" text-anchor="middle" fill="#e8eaf0" font-size="11" font-family="Segoe UI,sans-serif">AI Model</text>
+      <text x="455" y="203" text-anchor="middle" fill="#00c9a7" font-size="10" font-family="Segoe UI,sans-serif">(context-aware)</text>
+
+      <line x1="510" y1="190" x2="575" y2="190" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+      <text x="542" y="183" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Segoe UI,sans-serif">safe code</text>
+
+      <rect x="575" y="168" width="110" height="44" rx="8" fill="#22263a" stroke="#00c9a7" stroke-opacity="0.5"/>
+      <text x="630" y="187" text-anchor="middle" fill="#e8eaf0" font-size="11" font-family="Segoe UI,sans-serif">Generated</text>
+      <text x="630" y="200" text-anchor="middle" fill="#00c9a7" font-size="10" font-family="Segoe UI,sans-serif">Code (governed)</text>
+
+      <text x="630" y="240" text-anchor="middle" fill="#00c9a7" font-size="9.5" font-family="Segoe UI,sans-serif">secure · reuses patterns · layer-compliant</text>
+
+      <!-- KG + DB nodes for AFTER -->
+      <rect x="710" y="160" width="80" height="30" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="750" y="179" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Neo4j KG</text>
+      <rect x="710" y="198" width="80" height="30" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="750" y="217" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Policies</text>
+
+      <line x1="710" y1="175" x2="340" y2="200" stroke="#2e3350" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="710" y1="213" x2="340" y2="205" stroke="#2e3350" stroke-width="1" stroke-dasharray="3,3"/>
+    </svg>
+  </div>
+
+  <!-- What It Does -->
+  <h2>What ForgeLine Does</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h4>Security Rule Injection</h4>
+      <p>Injects OWASP-aligned rules (SQL injection, eval, input validation, secret management) per architecture layer before generation.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏗️</div>
+      <h4>Architecture Enforcement</h4>
+      <p>Defines which layers can call which — controllers cannot bypass services to hit the DB directly.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">♻️</div>
+      <h4>Pattern Reuse</h4>
+      <p>Surfaces existing functions and classes near the target file from the Neo4j knowledge graph. Prevents reinvention.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h4>Dependency Vetting</h4>
+      <p>Checks packages against an approved list and trust score. Catches phantom/hallucinated package names before they enter code.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h4>Data Sensitivity Rules</h4>
+      <p>Classifies fields as PII, PHI, PCI, FINANCIAL, or CREDENTIAL and injects handling constraints (encryption, logging bans) into context.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📐</div>
+      <h4>Coding Standards</h4>
+      <p>Injects naming conventions, async patterns, and team style guide rules. Configurable per policy profile.</p>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <h2>Who Uses This</h2>
+  <div class="personas">
+    <div class="persona">
+      <div class="persona-avatar">👩‍💻</div>
+      <h4>Application Developer</h4>
+      <p>Writes code in Cursor or Claude Code. ForgeLine transparently enriches their AI interactions with governance context.</p>
+    </div>
+    <div class="persona">
+      <div class="persona-avatar">🏛️</div>
+      <h4>Platform / Security Team</h4>
+      <p>Defines policy profiles, approved packages, and architecture rules. ForgeLine enforces them automatically in every AI generation.</p>
+    </div>
+    <div class="persona">
+      <div class="persona-avatar">🔬</div>
+      <h4>Engineering Manager</h4>
+      <p>Gets assurance that AI-generated code follows team standards without requiring manual review of every AI suggestion.</p>
+    </div>
+  </div>
+
+  <!-- Scope Table -->
+  <h2>Scope Boundaries</h2>
+  <div class="scope-grid">
+    <div class="scope-section in">
+      <h4>In Scope</h4>
+      <ul>
+        <li>MCP server exposing tools/resources/prompts</li>
+        <li>Neo4j-backed code knowledge graph queries</li>
+        <li>Built-in default policy rules (security, arch, style, testing, perf)</li>
+        <li>Custom policy loading from YAML files</li>
+        <li>Dependency trust scoring and phantom detection</li>
+        <li>Data sensitivity classification and constraint injection</li>
+        <li>IDE integration via stdio transport</li>
+        <li>Remote team deployment via HTTP transport</li>
+        <li>Docker Compose local development setup</li>
+      </ul>
+    </div>
+    <div class="scope-section out">
+      <h4>Out of Scope</h4>
+      <ul>
+        <li>Blocking / intercepting AI completions at runtime</li>
+        <li>Code scanning or static analysis of generated output</li>
+        <li>Real-time CVE vulnerability database (planned)</li>
+        <li>UI/dashboard for policy management (planned)</li>
+        <li>Multi-tenant user authentication (planned)</li>
+        <li>PostgreSQL policy storage (config present, not yet wired)</li>
+        <li>Automatic codebase indexing into Neo4j</li>
+        <li>Language server protocol (LSP) integration</li>
+      </ul>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

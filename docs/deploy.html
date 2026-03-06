@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeLine — Deployment</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #00c9a7;
+    --danger: #ff5c72;
+    --warn: #ffc847;
+    --text: #e8eaf0;
+    --muted: #8892b0;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  nav { margin-left: auto; display: flex; gap: 1.5rem; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  nav a:hover, nav a.active { color: var(--accent); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+  .page-title { font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
+  .page-title span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 1.15rem; margin-bottom: 3rem; }
+
+  h2 { font-size: 1.5rem; font-weight: 700; margin: 3rem 0 0.75rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.4rem; color: var(--accent2); }
+  p { color: var(--muted); margin-bottom: 0.8rem; }
+
+  /* Code blocks */
+  pre {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .kw { color: #c792ea; }
+  .str { color: #c3e88d; }
+  .cmt { color: #546e7a; font-style: italic; }
+  .key { color: #82aaff; }
+  .val { color: #f78c6c; }
+  .cmd { color: #00c9a7; }
+  .flag { color: #ffc847; }
+
+  /* Step cards */
+  .steps { display: flex; flex-direction: column; gap: 1px; margin: 1.5rem 0; }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    display: flex; gap: 1.25rem; align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+  .step-num {
+    min-width: 32px; height: 32px;
+    background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.4);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 800; color: var(--accent); flex-shrink: 0;
+  }
+  .step-content h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .step-content p { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+  /* Mode cards */
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1.5rem 0; }
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+  .mode-card .badge {
+    display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; margin-bottom: 0.75rem;
+  }
+  .mode-card.stdio .badge { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+  .mode-card.http .badge { background: rgba(0,201,167,0.1); color: var(--accent2); border: 1px solid rgba(0,201,167,0.3); }
+  .mode-card h3 { margin-top: 0; }
+
+  /* IDE integration cards */
+  .ide-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .ide-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .ide-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; }
+  .ide-card .config-path { font-size: 0.72rem; color: var(--muted); font-family: Consolas, monospace; margin-bottom: 0.5rem; }
+
+  /* Env table */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th { text-align: left; padding: 0.5rem 1rem; font-size: 0.78rem; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 0.5rem 1rem; font-size: 0.85rem; border-bottom: 1px solid rgba(46,51,80,0.5); }
+  td:first-child { font-family: Consolas, monospace; color: var(--accent2); font-size: 0.8rem; }
+  td:last-child { color: var(--muted); font-size: 0.82rem; }
+  td:nth-child(2) { color: var(--muted); }
+
+  /* Diagram */
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+  }
+  .diagram-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1.25rem; }
+
+  .callout {
+    background: rgba(255,200,71,0.07);
+    border: 1px solid rgba(255,200,71,0.25);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    margin: 1rem 0;
+    font-size: 0.87rem;
+    color: var(--warn);
+  }
+  .callout strong { color: var(--warn); }
+
+  code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: var(--accent2); font-family: 'Consolas', monospace; }
+
+  @media (max-width: 768px) {
+    header { padding: 1.5rem; flex-wrap: wrap; }
+    .mode-grid, .ide-grid { grid-template-columns: 1fr; }
+    .page-title { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Forge<span>Line</span></div>
+  <nav>
+    <a href="scope.html">Scope</a>
+    <a href="concepts.html">Concepts</a>
+    <a href="design.html">Design</a>
+    <a href="deploy.html" class="active">Deploy</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">Deployment <span>Guide</span></div>
+  <div class="subtitle">Local development, Docker, IDE integration, and team deployment.</div>
+
+  <!-- Deployment Modes Overview -->
+  <h2>Deployment Modes</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Topology Options</div>
+    <svg viewBox="0 0 820 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:240px">
+      <defs>
+        <marker id="da" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#6c63ff"/>
+        </marker>
+      </defs>
+
+      <!-- Mode 1: stdio -->
+      <rect x="10" y="10" width="370" height="210" rx="10" fill="#1a1d27" stroke="#6c63ff" stroke-opacity="0.4"/>
+      <text x="195" y="32" text-anchor="middle" fill="#6c63ff" font-size="10" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">MODE 1 — STDIO (Local, Per Developer)</text>
+
+      <rect x="25" y="48" width="100" height="50" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="75" y="72" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="Segoe UI,sans-serif">IDE</text>
+      <text x="75" y="87" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">Cursor / CC</text>
+
+      <path d="M125,73 L170,73" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#da)"/>
+      <text x="147" y="66" text-anchor="middle" fill="#6c63ff" font-size="8.5" font-family="Segoe UI,sans-serif">stdin/stdout</text>
+
+      <rect x="170" y="48" width="130" height="50" rx="8" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.6"/>
+      <text x="235" y="72" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="Segoe UI,sans-serif">ForgeLine MCP</text>
+      <text x="235" y="87" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Consolas,monospace">TRANSPORT=stdio</text>
+
+      <path d="M235,98 L235,125" stroke="#2e3350" stroke-width="1" fill="none" marker-end="url(#da)"/>
+
+      <rect x="165" y="125" width="80" height="32" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="205" y="145" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Neo4j local</text>
+
+      <rect x="260" y="125" width="80" height="32" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="300" y="145" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Policies (in-mem)</text>
+
+      <text x="195" y="185" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">Spawned by IDE as subprocess. No network port.</text>
+      <text x="195" y="200" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">Best for individual developers. uv run python -m src.server</text>
+
+      <!-- Mode 2: HTTP -->
+      <rect x="430" y="10" width="380" height="210" rx="10" fill="#1a1d27" stroke="#00c9a7" stroke-opacity="0.4"/>
+      <text x="620" y="32" text-anchor="middle" fill="#00c9a7" font-size="10" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">MODE 2 — HTTP (Shared Team Server)</text>
+
+      <rect x="445" y="48" width="80" height="40" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="485" y="71" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Dev 1 IDE</text>
+
+      <rect x="445" y="100" width="80" height="40" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="485" y="123" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Dev 2 IDE</text>
+
+      <rect x="445" y="152" width="80" height="40" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="485" y="175" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Dev 3 IDE</text>
+
+      <path d="M525,68 L570,85" stroke="#00c9a7" stroke-width="1.5" fill="none" marker-end="url(#da)"/>
+      <path d="M525,120 L570,120" stroke="#00c9a7" stroke-width="1.5" fill="none" marker-end="url(#da)"/>
+      <path d="M525,170 L570,155" stroke="#00c9a7" stroke-width="1.5" fill="none" marker-end="url(#da)"/>
+
+      <rect x="570" y="80" width="130" height="70" rx="8" fill="#22263a" stroke="#00c9a7" stroke-opacity="0.6"/>
+      <text x="635" y="106" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="Segoe UI,sans-serif">ForgeLine MCP</text>
+      <text x="635" y="120" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Consolas,monospace">streamable-http</text>
+      <text x="635" y="135" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">:8000</text>
+
+      <path d="M700,115 L740,115" stroke="#2e3350" stroke-width="1" fill="none" marker-end="url(#da)"/>
+
+      <rect x="740" y="78" width="60" height="32" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="770" y="98" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">Neo4j</text>
+
+      <rect x="740" y="120" width="60" height="32" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="770" y="140" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">Policies</text>
+
+      <text x="620" y="185" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">Single server shared by whole team. Consistent policies.</text>
+      <text x="620" y="200" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">Deploy with Docker Compose or Kubernetes.</text>
+    </svg>
+  </div>
+
+  <!-- Local Setup -->
+  <h2>Local Development Setup</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Install dependencies with uv</h4>
+        <p>uv is the recommended package manager. It creates a virtual environment automatically.</p>
+      </div>
+    </div>
+  </div>
+  <pre><span class="cmt"># Install uv if you don't have it</span>
+<span class="cmd">pip install uv</span>
+
+<span class="cmt"># Sync all dependencies (including dev extras)</span>
+<span class="cmd">uv sync</span>
+
+<span class="cmt"># Or with pip (alternative)</span>
+<span class="cmd">pip install -e ".[dev]"</span></pre>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Configure environment</h4>
+        <p>Copy the example env file and fill in your database credentials.</p>
+      </div>
+    </div>
+  </div>
+  <pre><span class="cmd">cp .env.example .env</span></pre>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Start Neo4j (optional but recommended)</h4>
+        <p>The server works without Neo4j (policy-only mode), but you lose pattern and sensitivity queries. Use Docker for the easiest setup.</p>
+      </div>
+    </div>
+  </div>
+  <pre><span class="cmt"># Start Neo4j and PostgreSQL via Docker Compose</span>
+<span class="cmd">docker compose up -d</span>
+
+<span class="cmt"># Seed the knowledge graph with sample data</span>
+<span class="cmd">python scripts/seed_kg.py</span></pre>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Run the server</h4>
+      </div>
+    </div>
+  </div>
+  <pre><span class="cmt"># stdio mode (for IDE integration)</span>
+<span class="cmd">uv run python -m src.server</span>
+
+<span class="cmt"># HTTP mode (for remote access)</span>
+<span class="cmd">uv run python -m src.server <span class="flag">--transport</span> streamable-http <span class="flag">--port</span> 8000</span>
+
+<span class="cmt"># Debug with MCP Inspector UI</span>
+<span class="cmd">uv run mcp dev src/server.py</span></pre>
+
+  <!-- Docker Compose -->
+  <h2>Docker Compose</h2>
+  <p>The included <code>docker-compose.yml</code> spins up Neo4j and PostgreSQL. The MCP server itself can also be containerized using the provided <code>Dockerfile</code>.</p>
+  <pre><span class="cmt"># Start all services</span>
+<span class="cmd">docker compose up -d</span>
+
+<span class="cmt"># View logs</span>
+<span class="cmd">docker compose logs -f forgeline</span>
+
+<span class="cmt"># Stop</span>
+<span class="cmd">docker compose down</span></pre>
+
+  <div class="callout">
+    <strong>Note:</strong> MCP stdio transport cannot run inside Docker for IDE integration — the IDE needs to spawn the process directly. Use Docker only for the HTTP transport mode or for the backing databases (Neo4j, PostgreSQL).
+  </div>
+
+  <!-- IDE Integration -->
+  <h2>IDE Integration</h2>
+  <div class="ide-grid">
+    <div class="ide-card">
+      <h4>Cursor</h4>
+      <div class="config-path">.cursor/mcp.json</div>
+      <pre style="padding: 0.9rem; font-size: 0.78rem;">{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"forgeline"</span>: {
+      <span class="key">"command"</span>: <span class="str">"uv"</span>,
+      <span class="key">"args"</span>: [
+        <span class="str">"--directory"</span>,
+        <span class="str">"/path/to/forgeline"</span>,
+        <span class="str">"run"</span>,
+        <span class="str">"python"</span>,
+        <span class="str">"-m"</span>,
+        <span class="str">"src.server"</span>
+      ]
+    }
+  }
+}</pre>
+    </div>
+    <div class="ide-card">
+      <h4>Claude Desktop</h4>
+      <div class="config-path">claude_desktop_config.json</div>
+      <pre style="padding: 0.9rem; font-size: 0.78rem;">{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"forgeline"</span>: {
+      <span class="key">"command"</span>: <span class="str">"uv"</span>,
+      <span class="key">"args"</span>: [
+        <span class="str">"--directory"</span>,
+        <span class="str">"/path/to/forgeline"</span>,
+        <span class="str">"run"</span>,
+        <span class="str">"python"</span>,
+        <span class="str">"-m"</span>,
+        <span class="str">"src.server"</span>
+      ]
+    }
+  }
+}</pre>
+    </div>
+    <div class="ide-card">
+      <h4>HTTP Remote (any IDE)</h4>
+      <div class="config-path">Team-deployed server</div>
+      <pre style="padding: 0.9rem; font-size: 0.78rem;">{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"forgeline"</span>: {
+      <span class="key">"url"</span>: <span class="str">"http://forgeline.internal:8000"</span>,
+      <span class="key">"transport"</span>: <span class="str">"streamable-http"</span>
+    }
+  }
+}</pre>
+      <p style="font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem;">Replace URL with your deployed server address.</p>
+    </div>
+  </div>
+
+  <!-- Transport Modes -->
+  <h2>Transport Modes</h2>
+  <div class="mode-grid">
+    <div class="mode-card stdio">
+      <span class="badge">stdio</span>
+      <h3>Standard I/O</h3>
+      <p>The IDE spawns the MCP server as a child process and communicates over stdin/stdout. Default mode. All logging must go to stderr (already configured) to avoid corrupting the MCP wire format.</p>
+      <pre style="margin-top: 0.75rem; font-size: 0.8rem;"><span class="key">TRANSPORT</span>=<span class="str">stdio</span></pre>
+    </div>
+    <div class="mode-card http">
+      <span class="badge">streamable-http</span>
+      <h3>HTTP / SSE</h3>
+      <p>Server listens on a TCP port. IDEs connect over HTTP. Suitable for a shared team deployment. Multiple developers share one server instance and the same policy set.</p>
+      <pre style="margin-top: 0.75rem; font-size: 0.8rem;"><span class="key">TRANSPORT</span>=<span class="str">streamable-http</span>
+<span class="key">SERVER_PORT</span>=<span class="str">8000</span></pre>
+    </div>
+  </div>
+
+  <!-- Environment Variables Reference -->
+  <h2>Environment Variables Reference</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Variable</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>NEO4J_URI</td>
+        <td>bolt://localhost:7687</td>
+        <td>Neo4j Bolt connection URI</td>
+      </tr>
+      <tr>
+        <td>NEO4J_USER</td>
+        <td>neo4j</td>
+        <td>Neo4j username</td>
+      </tr>
+      <tr>
+        <td>NEO4J_PASSWORD</td>
+        <td>password</td>
+        <td>Neo4j password</td>
+      </tr>
+      <tr>
+        <td>NEO4J_DATABASE</td>
+        <td>neo4j</td>
+        <td>Neo4j database name</td>
+      </tr>
+      <tr>
+        <td>DATABASE_URL</td>
+        <td>postgresql+asyncpg://…</td>
+        <td>PostgreSQL connection URL (asyncpg format)</td>
+      </tr>
+      <tr>
+        <td>TRANSPORT</td>
+        <td>stdio</td>
+        <td>MCP transport: stdio, streamable-http, or sse</td>
+      </tr>
+      <tr>
+        <td>SERVER_PORT</td>
+        <td>8000</td>
+        <td>HTTP port (only used when TRANSPORT=streamable-http)</td>
+      </tr>
+      <tr>
+        <td>SERVER_HOST</td>
+        <td>0.0.0.0</td>
+        <td>HTTP bind address</td>
+      </tr>
+      <tr>
+        <td>LOG_LEVEL</td>
+        <td>INFO</td>
+        <td>Logging verbosity: DEBUG, INFO, WARNING, ERROR</td>
+      </tr>
+      <tr>
+        <td>CACHE_TTL_SECONDS</td>
+        <td>300</td>
+        <td>TTL for Neo4j query cache entries (seconds)</td>
+      </tr>
+      <tr>
+        <td>PATTERN_CACHE_MAX_SIZE</td>
+        <td>500</td>
+        <td>Maximum number of cached KG query results</td>
+      </tr>
+      <tr>
+        <td>FORGELINE_API_URL</td>
+        <td>(empty)</td>
+        <td>Optional: ForgeLine cloud API base URL</td>
+      </tr>
+      <tr>
+        <td>FORGELINE_API_KEY</td>
+        <td>(empty)</td>
+        <td>Optional: ForgeLine cloud API key</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Development Commands -->
+  <h2>Development Commands</h2>
+  <pre><span class="cmt"># Run all tests (no Neo4j required)</span>
+<span class="cmd">uv run pytest tests/ -v</span>
+
+<span class="cmt"># Run a single test class</span>
+<span class="cmd">uv run pytest tests/test_core.py::TestPolicyService -v</span>
+
+<span class="cmt"># Run a single test</span>
+<span class="cmd">uv run pytest tests/test_core.py::TestLayerInference::test_controller_detection -v</span>
+
+<span class="cmt"># Type checking</span>
+<span class="cmd">uv run mypy src/</span>
+
+<span class="cmt"># Lint</span>
+<span class="cmd">uv run ruff check src/</span>
+
+<span class="cmt"># Lint and auto-fix</span>
+<span class="cmd">uv run ruff check --fix src/</span>
+
+<span class="cmt"># Load custom policies from YAML</span>
+<span class="cmt"># Call policy_service.load_policies_from_file("policies.yaml") in startup hook</span></pre>
+
+  <!-- Neo4j Graph Schema: Seed Script -->
+  <h2>Seeding the Knowledge Graph</h2>
+  <p>The seed script (<code>scripts/seed_kg.py</code>) populates Neo4j with sample data representing a TypeScript SaaS codebase. It creates 12 modules, 11 functions, 6 classes, 5 sensitive data fields, 8 dependencies, and 3 architecture boundary rules.</p>
+
+  <pre><span class="cmt"># Ensure Neo4j is running, then:</span>
+<span class="cmd">python scripts/seed_kg.py</span>
+
+<span class="cmt"># Output:</span>
+<span class="cmt"># ✅ Neo4j seeded with sample data!</span>
+<span class="cmt">#    • 12 modules, 11 functions, 6 classes</span>
+<span class="cmt">#    • 5 sensitive data fields, 8 dependencies</span>
+<span class="cmt">#    • 3 architecture boundary rules</span></pre>
+
+  <div class="callout">
+    <strong>Warning:</strong> The seed script runs <code>MATCH (n) DETACH DELETE n</code> first — it wipes all existing Neo4j data before seeding. Use only on a development database.
+  </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeLine — System Design</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #00c9a7;
+    --danger: #ff5c72;
+    --warn: #ffc847;
+    --text: #e8eaf0;
+    --muted: #8892b0;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  nav { margin-left: auto; display: flex; gap: 1.5rem; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  nav a:hover, nav a.active { color: var(--accent); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+  .page-title { font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
+  .page-title span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 1.15rem; margin-bottom: 3rem; }
+
+  h2 { font-size: 1.5rem; font-weight: 700; margin: 3rem 0 0.75rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.4rem; color: var(--accent2); }
+  p { color: var(--muted); margin-bottom: 0.8rem; }
+
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+  }
+  .diagram-title {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1.5rem;
+  }
+
+  .component-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .component-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .component-card .file {
+    font-size: 0.72rem; color: var(--accent); font-family: Consolas, monospace;
+    background: rgba(108,99,255,0.1); padding: 2px 6px; border-radius: 4px;
+    display: inline-block; margin-bottom: 0.6rem;
+  }
+  .component-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .component-card p { font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+
+  /* Sequence diagram styling */
+  code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: var(--accent2); font-family: 'Consolas', monospace; }
+
+  .tool-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
+  .tool-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    display: flex; gap: 0.75rem; align-items: flex-start;
+  }
+  .tool-item .badge {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 4px; white-space: nowrap; margin-top: 2px;
+  }
+  .tool-item .badge.tool { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+  .tool-item .badge.resource { background: rgba(0,201,167,0.1); color: var(--accent2); border: 1px solid rgba(0,201,167,0.3); }
+  .tool-item .badge.prompt { background: rgba(255,200,71,0.1); color: var(--warn); border: 1px solid rgba(255,200,71,0.3); }
+  .tool-item .content h5 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.2rem; font-family: Consolas, monospace; }
+  .tool-item .content p { font-size: 0.78rem; margin: 0; }
+
+  @media (max-width: 768px) {
+    header { padding: 1.5rem; flex-wrap: wrap; }
+    .component-grid, .two-col, .tool-list { grid-template-columns: 1fr; }
+    .page-title { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Forge<span>Line</span></div>
+  <nav>
+    <a href="scope.html">Scope</a>
+    <a href="concepts.html">Concepts</a>
+    <a href="design.html" class="active">Design</a>
+    <a href="deploy.html">Deploy</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">System <span>Design</span></div>
+  <div class="subtitle">Architecture, components, and request flows.</div>
+
+  <!-- High-level Architecture -->
+  <h2>High-Level Architecture</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Component Overview</div>
+    <svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:420px">
+      <defs>
+        <marker id="a1" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#6c63ff"/>
+        </marker>
+        <marker id="a2" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#00c9a7"/>
+        </marker>
+        <marker id="a3" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#2e3350"/>
+        </marker>
+      </defs>
+
+      <!-- IDE Clients -->
+      <rect x="10" y="30" width="140" height="160" rx="10" fill="#22263a" stroke="#2e3350"/>
+      <text x="80" y="54" text-anchor="middle" fill="#8892b0" font-size="9" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">IDE CLIENTS</text>
+      <rect x="22" y="62" width="116" height="26" rx="5" fill="#1a1d27" stroke="#2e3350"/>
+      <text x="80" y="79" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">Cursor</text>
+      <rect x="22" y="94" width="116" height="26" rx="5" fill="#1a1d27" stroke="#2e3350"/>
+      <text x="80" y="111" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">Claude Code</text>
+      <rect x="22" y="126" width="116" height="26" rx="5" fill="#1a1d27" stroke="#2e3350"/>
+      <text x="80" y="143" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">GitHub Copilot</text>
+      <rect x="22" y="158" width="116" height="26" rx="5" fill="#1a1d27" stroke="#2e3350"/>
+      <text x="80" y="175" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">Windsurf</text>
+
+      <!-- Arrow IDE -> MCP -->
+      <path d="M150,110 L210,110" stroke="#6c63ff" stroke-width="2" fill="none" marker-end="url(#a1)"/>
+      <text x="180" y="103" text-anchor="middle" fill="#6c63ff" font-size="8.5" font-family="Segoe UI,sans-serif">MCP call</text>
+      <path d="M210,125 L150,125" stroke="#00c9a7" stroke-width="2" fill="none" marker-end="url(#a2)"/>
+      <text x="180" y="142" text-anchor="middle" fill="#00c9a7" font-size="8.5" font-family="Segoe UI,sans-serif">context text</text>
+
+      <!-- ForgeLine MCP Server box -->
+      <rect x="210" y="10" width="340" height="360" rx="12" fill="#1a1d27" stroke="#6c63ff" stroke-width="1.5"/>
+      <text x="380" y="36" text-anchor="middle" fill="#6c63ff" font-size="12" font-weight="800" font-family="Segoe UI,sans-serif">ForgeLine MCP Server</text>
+      <text x="380" y="52" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">src/server.py — FastMCP</text>
+
+      <!-- Tools section -->
+      <rect x="224" y="65" width="148" height="180" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="298" y="84" text-anchor="middle" fill="#8892b0" font-size="8.5" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">TOOLS</text>
+      <text x="298" y="101" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">get_context_for_file</text>
+      <text x="298" y="117" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">get_security_rules</text>
+      <text x="298" y="133" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">get_existing_patterns</text>
+      <text x="298" y="149" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">get_architecture_map</text>
+      <text x="298" y="165" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">check_dependency</text>
+      <text x="298" y="181" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">get_data_sensitivity</text>
+
+      <!-- Resources section -->
+      <rect x="224" y="258" width="148" height="82" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="298" y="277" text-anchor="middle" fill="#8892b0" font-size="8.5" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">RESOURCES</text>
+      <text x="298" y="295" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">policies/active</text>
+      <text x="298" y="311" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">architecture/graph</text>
+      <text x="298" y="327" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">standards/style-guide</text>
+
+      <!-- Services section -->
+      <rect x="386" y="65" width="152" height="130" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="462" y="84" text-anchor="middle" fill="#8892b0" font-size="8.5" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">SERVICES</text>
+
+      <rect x="396" y="94" width="132" height="32" rx="6" fill="#1a1d27" stroke="#6c63ff" stroke-opacity="0.4"/>
+      <text x="462" y="110" text-anchor="middle" fill="#e8eaf0" font-size="9.5" font-family="Consolas,monospace">ContextBuilder</text>
+      <text x="462" y="121" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">context_builder.py</text>
+
+      <rect x="396" y="133" width="132" height="32" rx="6" fill="#1a1d27" stroke="#2e3350"/>
+      <text x="462" y="149" text-anchor="middle" fill="#e8eaf0" font-size="9.5" font-family="Consolas,monospace">KnowledgeGraphSvc</text>
+      <text x="462" y="160" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">knowledge_graph.py</text>
+
+      <rect x="396" y="172" width="132" height="32" rx="6" fill="#1a1d27" stroke="#2e3350"/>
+      <text x="462" y="188" text-anchor="middle" fill="#e8eaf0" font-size="9.5" font-family="Consolas,monospace">PolicyService</text>
+      <text x="462" y="199" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">policies.py</text>
+
+      <!-- Config + Models -->
+      <rect x="386" y="208" width="152" height="65" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="462" y="226" text-anchor="middle" fill="#8892b0" font-size="8.5" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">MODELS</text>
+      <text x="462" y="244" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">schemas.py — FileContext</text>
+      <text x="462" y="260" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">PolicyRule · LayerBoundary</text>
+
+      <!-- Config -->
+      <rect x="224" y="355" width="314" height="30" rx="6" fill="#22263a" stroke="#2e3350"/>
+      <text x="381" y="374" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Consolas,monospace">config/settings.py — pydantic-settings + .env</text>
+
+      <!-- Prompt box -->
+      <rect x="386" y="282" width="152" height="60" rx="8" fill="#22263a" stroke="#2e3350"/>
+      <text x="462" y="300" text-anchor="middle" fill="#8892b0" font-size="8.5" font-weight="700" letter-spacing="1" font-family="Segoe UI,sans-serif">PROMPTS</text>
+      <text x="462" y="320" text-anchor="middle" fill="#e8eaf0" font-size="9" font-family="Consolas,monospace">code_with_governance</text>
+
+      <!-- Arrow to Neo4j -->
+      <path d="M550,140 L620,140" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#a3)"/>
+      <path d="M620,155 L550,155" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#a3)"/>
+
+      <!-- External systems -->
+      <!-- Neo4j -->
+      <rect x="620" y="60" width="130" height="80" rx="10" fill="#22263a" stroke="#2e3350"/>
+      <text x="685" y="90" text-anchor="middle" fill="#e8eaf0" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">Neo4j</text>
+      <text x="685" y="108" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">bolt://localhost:7687</text>
+      <text x="685" y="124" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">Knowledge Graph</text>
+
+      <!-- PostgreSQL -->
+      <rect x="620" y="160" width="130" height="80" rx="10" fill="#22263a" stroke="#2e3350" stroke-dasharray="4,3"/>
+      <text x="685" y="190" text-anchor="middle" fill="#8892b0" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">PostgreSQL</text>
+      <text x="685" y="208" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">Planned: policy</text>
+      <text x="685" y="222" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">audit · users</text>
+
+      <!-- TTL Cache -->
+      <rect x="620" y="260" width="130" height="60" rx="10" fill="#22263a" stroke="#2e3350"/>
+      <text x="685" y="287" text-anchor="middle" fill="#8892b0" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">TTL Cache</text>
+      <text x="685" y="305" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">cachetools in-process</text>
+
+      <path d="M550,180 L620,200" stroke="#2e3350" stroke-width="1" stroke-dasharray="3,3" fill="none"/>
+    </svg>
+  </div>
+
+  <!-- Components -->
+  <h2>Component Reference</h2>
+  <div class="component-grid">
+    <div class="component-card">
+      <span class="file">src/server.py</span>
+      <h4>MCP Server Entry Point</h4>
+      <p>Defines all tools, resources, and prompts using FastMCP decorators. Handles startup (KG connect) and shutdown lifecycle. All logging routes to stderr for MCP stdio compatibility.</p>
+    </div>
+    <div class="component-card">
+      <span class="file">src/services/context_builder.py</span>
+      <h4>Context Builder</h4>
+      <p>Orchestrates all data sources into a <code>FileContext</code>. Calls KG service and policy service in sequence. Each step is independently fault-tolerant — KG failure doesn't prevent policy delivery.</p>
+    </div>
+    <div class="component-card">
+      <span class="file">src/services/knowledge_graph.py</span>
+      <h4>Knowledge Graph Service</h4>
+      <p>Async Neo4j driver wrapper with TTL cache and retry logic (tenacity, 3 attempts, exponential backoff). Contains Cypher queries for modules, functions, classes, boundaries, sensitivity, and dependencies.</p>
+    </div>
+    <div class="component-card">
+      <span class="file">src/services/policies.py</span>
+      <h4>Policy Service</h4>
+      <p>In-memory policy engine. Ships 14 default rules across 5 categories. Supports YAML-based custom profiles. Filters rules by architecture layer. No database dependency.</p>
+    </div>
+    <div class="component-card">
+      <span class="file">src/models/schemas.py</span>
+      <h4>Pydantic Schemas</h4>
+      <p>All domain models: <code>FileContext</code>, <code>PolicyRule</code>, <code>FunctionPattern</code>, <code>ClassPattern</code>, <code>LayerBoundary</code>, <code>SensitiveField</code>. <code>FileContext.to_prompt_context()</code> serializes to markdown text.</p>
+    </div>
+    <div class="component-card">
+      <span class="file">src/config/settings.py</span>
+      <h4>Settings</h4>
+      <p>Pydantic-settings class that reads from environment variables and <code>.env</code> file. Configures Neo4j, PostgreSQL, transport mode, cache TTL, and optional ForgeLine cloud API.</p>
+    </div>
+  </div>
+
+  <!-- Request Sequence -->
+  <h2>Request Sequence — get_context_for_file</h2>
+  <div class="diagram-container">
+    <div class="diagram-title">Sequence Diagram — Primary Tool Call</div>
+    <svg viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:480px">
+      <defs>
+        <marker id="seq-arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#6c63ff"/>
+        </marker>
+        <marker id="seq-ret" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#00c9a7"/>
+        </marker>
+      </defs>
+
+      <!-- Lifeline labels -->
+      <text x="80" y="20" text-anchor="middle" fill="#e8eaf0" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">IDE/AI</text>
+      <text x="230" y="20" text-anchor="middle" fill="#6c63ff" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">server.py</text>
+      <text x="380" y="20" text-anchor="middle" fill="#00c9a7" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">context_builder</text>
+      <text x="550" y="20" text-anchor="middle" fill="#ffc847" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">policies.py</text>
+      <text x="700" y="20" text-anchor="middle" fill="#8892b0" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">knowledge_graph</text>
+
+      <!-- Lifelines -->
+      <line x1="80" y1="30" x2="80" y2="470" stroke="#2e3350" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="230" y1="30" x2="230" y2="470" stroke="#6c63ff" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.5"/>
+      <line x1="380" y1="30" x2="380" y2="470" stroke="#00c9a7" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.5"/>
+      <line x1="550" y1="30" x2="550" y2="470" stroke="#ffc847" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.3"/>
+      <line x1="700" y1="30" x2="700" y2="470" stroke="#8892b0" stroke-width="1" stroke-dasharray="4,4" stroke-opacity="0.3"/>
+
+      <!-- Step 1: IDE calls tool -->
+      <path d="M80,50 L222,50" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="151" y="44" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_context_for_file(file_path)</text>
+
+      <!-- Step 2: server -> context_builder -->
+      <path d="M230,75 L372,75" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="301" y="69" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">build_context(file_path)</text>
+
+      <!-- Step 3: context_builder -> KG for layer -->
+      <path d="M380,100 L692,100" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="536" y="94" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_layer_for_file(file_path)</text>
+
+      <!-- Layer returned -->
+      <path d="M700,118 L388,118" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="544" y="130" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">layer = "service" (or inferred from path)</text>
+
+      <!-- Step 4: context_builder -> policies -->
+      <path d="M380,148" stroke="#6c63ff" fill="none"/>
+      <path d="M380,148 L542,148" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="461" y="142" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_constraint_texts(layer, ...)</text>
+
+      <!-- Rules returned -->
+      <path d="M550,165 L388,165" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="469" y="177" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">security_rules, arch_constraints, style_rules</text>
+
+      <!-- Step 5: KG patterns -->
+      <path d="M380,195 L692,195" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="536" y="189" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_functions_in_module(file_path) [cached]</text>
+
+      <path d="M700,213 L388,213" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="544" y="225" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">list[FunctionPattern]</text>
+
+      <!-- Step 6: KG classes -->
+      <path d="M380,240 L692,240" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="536" y="234" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_classes_in_module(file_path) [cached]</text>
+
+      <path d="M700,258 L388,258" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="544" y="270" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">list[ClassPattern]</text>
+
+      <!-- Step 7: sensitivity -->
+      <path d="M380,285 L692,285" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="536" y="279" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_sensitive_fields_for_module(file_path)</text>
+
+      <path d="M700,303 L388,303" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="544" y="315" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">list[SensitiveField]</text>
+
+      <!-- Step 8: boundaries -->
+      <path d="M380,330 L692,330" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#seq-arr)"/>
+      <text x="536" y="324" text-anchor="middle" fill="#8892b0" font-size="9" font-family="Segoe UI,sans-serif">get_architecture_boundaries(repo_name)</text>
+
+      <path d="M700,348 L388,348" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="544" y="360" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">list[LayerBoundary]</text>
+
+      <!-- Step 9: assemble context -->
+      <rect x="340" y="372" width="80" height="20" rx="4" fill="#1a1d27" stroke="#00c9a7"/>
+      <text x="380" y="386" text-anchor="middle" fill="#00c9a7" font-size="8.5" font-family="Segoe UI,sans-serif">FileContext</text>
+      <text x="380" y="402" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">.to_prompt_context()</text>
+
+      <!-- Return to server -->
+      <path d="M380,415 L238,415" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="309" y="409" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">formatted context text</text>
+
+      <!-- Return to IDE -->
+      <path d="M230,440 L88,440" stroke="#00c9a7" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#seq-ret)"/>
+      <text x="159" y="434" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">Governance Context (markdown)</text>
+    </svg>
+  </div>
+
+  <!-- MCP Surface Reference -->
+  <h2>Full MCP Surface Reference</h2>
+  <div class="tool-list">
+    <div class="tool-item">
+      <span class="badge tool">Tool</span>
+      <div class="content">
+        <h5>get_context_for_file</h5>
+        <p>Primary tool. Returns complete governance context: security rules, arch constraints, existing patterns, sensitivity rules, approved packages.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge tool">Tool</span>
+      <div class="content">
+        <h5>get_security_rules</h5>
+        <p>Returns only security rules for a given layer. Useful when the AI only needs security context without full file context.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge tool">Tool</span>
+      <div class="content">
+        <h5>get_existing_patterns</h5>
+        <p>Queries Neo4j for exported functions and classes near a file path. Prevents the AI from reinventing existing utilities.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge tool">Tool</span>
+      <div class="content">
+        <h5>get_architecture_map</h5>
+        <p>Returns the full architecture boundary graph — which layers can and cannot import from which others.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge tool">Tool</span>
+      <div class="content">
+        <h5>check_dependency</h5>
+        <p>Checks a package name against the KG. Detects phantoms (hallucinated packages), trust score, CVE count, and approval status.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge tool">Tool</span>
+      <div class="content">
+        <h5>get_data_sensitivity</h5>
+        <p>Returns PII/PHI/PCI/FINANCIAL/CREDENTIAL field classifications and their handling constraints for the target module.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge resource">Resource</span>
+      <div class="content">
+        <h5>forgeline://policies/active</h5>
+        <p>All active policy rules from the default profile, organized by category. Read-only reference document.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge resource">Resource</span>
+      <div class="content">
+        <h5>forgeline://architecture/graph</h5>
+        <p>Full architecture boundary graph from Neo4j. Falls back to a hardcoded default layered architecture if KG is unavailable.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge resource">Resource</span>
+      <div class="content">
+        <h5>forgeline://standards/style-guide</h5>
+        <p>Coding standards and style rules for the service layer. Driven by STYLE-category policy rules.</p>
+      </div>
+    </div>
+    <div class="tool-item">
+      <span class="badge prompt">Prompt</span>
+      <div class="content">
+        <h5>code_with_governance</h5>
+        <p>Template that instructs the AI to call the three primary tools before writing any code. Args: task, file_path, language.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Caching Strategy -->
+  <h2>Caching Strategy</h2>
+  <div class="two-col">
+    <div class="diagram-container">
+      <h3>TTLCache — KnowledgeGraphService</h3>
+      <p>Pattern queries (functions, classes), architecture boundaries, and dependency data are cached in a <code>TTLCache</code>. Cache key includes repo name + directory prefix. Default: 500 entries, 5-minute TTL.</p>
+    </div>
+    <div class="diagram-container">
+      <h3>TTLCache — PolicyService</h3>
+      <p>Policy rule lookups are cached separately. Default: 100 entries, 5-minute TTL. Both TTL and max sizes are configurable via <code>CACHE_TTL_SECONDS</code> and <code>PATTERN_CACHE_MAX_SIZE</code> env vars.</p>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

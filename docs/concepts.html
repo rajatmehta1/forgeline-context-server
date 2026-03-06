@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeLine — Core Concepts</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #00c9a7;
+    --danger: #ff5c72;
+    --warn: #ffc847;
+    --text: #e8eaf0;
+    --muted: #8892b0;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  nav { margin-left: auto; display: flex; gap: 1.5rem; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  nav a:hover, nav a.active { color: var(--accent); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+  .page-title { font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
+  .page-title span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 1.15rem; margin-bottom: 3rem; }
+
+  h2 { font-size: 1.5rem; font-weight: 700; margin: 3rem 0 0.75rem; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.4rem; color: var(--accent2); }
+  p { color: var(--muted); margin-bottom: 0.8rem; }
+
+  .concept-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    margin: 1.5rem 0;
+  }
+  .concept-block .tag {
+    display: inline-block;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--accent); background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.25);
+    border-radius: 4px; padding: 2px 8px; margin-bottom: 0.75rem;
+  }
+  .concept-block h3 { margin-top: 0; }
+
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    margin: 1.5rem 0;
+  }
+  .diagram-title {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1.25rem;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1.5rem 0; }
+
+  /* Sensitivity tags */
+  .tag-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; margin: 1.25rem 0; }
+  .sens-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 0.75rem;
+    text-align: center;
+  }
+  .sens-tag .label { font-size: 0.9rem; font-weight: 800; margin-bottom: 0.3rem; }
+  .sens-tag p { font-size: 0.75rem; margin: 0; }
+  .sens-tag.pii { border-color: rgba(255,200,71,0.4); }
+  .sens-tag.pii .label { color: #ffc847; }
+  .sens-tag.phi { border-color: rgba(0,201,167,0.4); }
+  .sens-tag.phi .label { color: #00c9a7; }
+  .sens-tag.pci { border-color: rgba(255,92,114,0.4); }
+  .sens-tag.pci .label { color: #ff5c72; }
+  .sens-tag.fin { border-color: rgba(108,99,255,0.4); }
+  .sens-tag.fin .label { color: #6c63ff; }
+  .sens-tag.cred { border-color: rgba(136,146,176,0.4); }
+  .sens-tag.cred .label { color: #8892b0; }
+
+  /* Severity */
+  .sev-row { display: flex; gap: 1rem; margin: 1rem 0; }
+  .sev-card { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .sev-card .name { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .sev-card p { font-size: 0.8rem; margin: 0; }
+  .sev-card.block .name { color: #ff5c72; }
+  .sev-card.warn .name { color: #ffc847; }
+  .sev-card.suggest .name { color: #00c9a7; }
+
+  /* Policy categories */
+  .cat-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin: 1rem 0; }
+  .cat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; text-align: center; }
+  .cat-card .icon { font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .cat-card .name { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+
+  /* Layer table */
+  .layer-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  .layer-table th { text-align: left; padding: 0.6rem 1rem; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .layer-table td { padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--muted); border-bottom: 1px solid rgba(46,51,80,0.5); }
+  .layer-table td:first-child { color: var(--accent2); font-weight: 600; }
+  .layer-table code { background: var(--surface2); padding: 1px 6px; border-radius: 4px; font-size: 0.78rem; color: var(--text); }
+
+  code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: var(--accent2); font-family: 'Consolas', monospace; }
+
+  @media (max-width: 768px) {
+    header { padding: 1.5rem; flex-wrap: wrap; }
+    .two-col, .tag-grid, .cat-list { grid-template-columns: 1fr 1fr; }
+    .sev-row { flex-direction: column; }
+    .page-title { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Forge<span>Line</span></div>
+  <nav>
+    <a href="scope.html">Scope</a>
+    <a href="concepts.html" class="active">Concepts</a>
+    <a href="design.html">Design</a>
+    <a href="deploy.html">Deploy</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">Core <span>Concepts</span></div>
+  <div class="subtitle">The key ideas and abstractions that make ForgeLine work.</div>
+
+  <!-- MCP Protocol -->
+  <h2>1. Model Context Protocol (MCP)</h2>
+  <div class="concept-block">
+    <div class="tag">Protocol</div>
+    <p>MCP is an open standard (by Anthropic) that lets AI coding assistants call external servers for structured context. ForgeLine implements an MCP server using <strong>FastMCP</strong>, exposing three kinds of capabilities:</p>
+    <div class="two-col">
+      <div>
+        <h3>Tools</h3>
+        <p>Functions the AI can call to retrieve information on demand. The AI decides when to call a tool during a conversation. Tools return structured text that gets appended to the AI's context window.</p>
+      </div>
+      <div>
+        <h3>Resources</h3>
+        <p>Static or semi-static data documents the AI can read for reference. In ForgeLine these expose full policy lists, architecture graphs, and the style guide. Accessed via URI scheme <code>forgeline://...</code></p>
+      </div>
+    </div>
+    <h3>Prompts</h3>
+    <p>Reusable prompt templates that encode best practices for invoking the server's tools. The <code>code_with_governance</code> prompt instructs the AI to call <code>get_context_for_file</code> and <code>get_existing_patterns</code> before generating any code.</p>
+  </div>
+
+  <div class="diagram-container">
+    <div class="diagram-title">MCP Communication Model</div>
+    <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:220px">
+      <defs>
+        <marker id="arr" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#6c63ff"/>
+        </marker>
+        <marker id="arr2" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 Z" fill="#00c9a7"/>
+        </marker>
+      </defs>
+
+      <!-- IDE -->
+      <rect x="20" y="60" width="140" height="80" rx="10" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.5"/>
+      <text x="90" y="92" text-anchor="middle" fill="#e8eaf0" font-size="12" font-weight="700" font-family="Segoe UI,sans-serif">IDE / AI Client</text>
+      <text x="90" y="110" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">Cursor · Claude Code</text>
+      <text x="90" y="124" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">Copilot · Windsurf</text>
+
+      <!-- Arrow IDE -> MCP -->
+      <path d="M160,90 L220,90" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+      <text x="190" y="82" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Segoe UI,sans-serif">call tool</text>
+      <path d="M220,110 L160,110" stroke="#00c9a7" stroke-width="1.5" fill="none" marker-end="url(#arr2)"/>
+      <text x="190" y="125" text-anchor="middle" fill="#00c9a7" font-size="9" font-family="Segoe UI,sans-serif">context text</text>
+
+      <!-- MCP Server -->
+      <rect x="220" y="40" width="180" height="120" rx="10" fill="#1a1d27" stroke="#6c63ff"/>
+      <text x="310" y="65" text-anchor="middle" fill="#6c63ff" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ForgeLine MCP Server</text>
+      <text x="310" y="83" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Tools: get_context_for_file</text>
+      <text x="310" y="97" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">get_security_rules</text>
+      <text x="310" y="111" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">check_dependency</text>
+      <text x="310" y="125" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">get_existing_patterns</text>
+      <text x="310" y="139" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">get_data_sensitivity</text>
+
+      <!-- Arrow MCP -> Neo4j -->
+      <path d="M400,80 L460,80" stroke="#6c63ff" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+      <path d="M460,100 L400,100" stroke="#00c9a7" stroke-width="1.5" fill="none" marker-end="url(#arr2)"/>
+
+      <!-- Neo4j -->
+      <rect x="460" y="55" width="120" height="60" rx="10" fill="#22263a" stroke="#2e3350"/>
+      <text x="520" y="83" text-anchor="middle" fill="#e8eaf0" font-size="11" font-family="Segoe UI,sans-serif">Neo4j</text>
+      <text x="520" y="98" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">Knowledge Graph</text>
+
+      <!-- Policy -->
+      <rect x="460" y="130" width="120" height="40" rx="10" fill="#22263a" stroke="#2e3350"/>
+      <text x="520" y="155" text-anchor="middle" fill="#8892b0" font-size="10" font-family="Segoe UI,sans-serif">Policy Engine</text>
+
+      <path d="M400,130 L460,150" stroke="#6c63ff" stroke-width="1" stroke-dasharray="3,3" fill="none"/>
+
+      <!-- Transport label -->
+      <rect x="600" y="60" width="160" height="80" rx="8" fill="none" stroke="#2e3350"/>
+      <text x="680" y="87" text-anchor="middle" fill="#8892b0" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">Transport Modes</text>
+      <text x="680" y="103" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">stdio — IDE local</text>
+      <text x="680" y="117" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">streamable-http — team</text>
+      <text x="680" y="131" text-anchor="middle" fill="#8892b0" font-size="9.5" font-family="Segoe UI,sans-serif">SSE — streaming</text>
+    </svg>
+  </div>
+
+  <!-- Knowledge Graph -->
+  <h2>2. The Code Knowledge Graph</h2>
+  <div class="concept-block">
+    <div class="tag">Neo4j</div>
+    <p>ForgeLine stores a graph of your codebase in Neo4j. Each node represents a code entity, and edges represent relationships. This enables rich queries like "find all exported functions in the same module directory as this file".</p>
+
+    <div class="diagram-container" style="margin: 1rem 0; padding: 1.25rem;">
+      <div class="diagram-title">Neo4j Graph Schema</div>
+      <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:260px">
+        <defs>
+          <marker id="garr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#2e3350"/>
+          </marker>
+        </defs>
+
+        <!-- Repository -->
+        <ellipse cx="380" cy="40" rx="75" ry="24" fill="#22263a" stroke="#6c63ff" stroke-width="1.5"/>
+        <text x="380" y="44" text-anchor="middle" fill="#6c63ff" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">Repository</text>
+
+        <!-- Module -->
+        <ellipse cx="200" cy="130" rx="65" ry="24" fill="#22263a" stroke="#00c9a7" stroke-width="1.5"/>
+        <text x="200" y="134" text-anchor="middle" fill="#00c9a7" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">Module</text>
+
+        <!-- Function -->
+        <ellipse cx="80" cy="220" rx="60" ry="22" fill="#22263a" stroke="#ffc847" stroke-width="1.5"/>
+        <text x="80" y="224" text-anchor="middle" fill="#ffc847" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">Function</text>
+
+        <!-- Class -->
+        <ellipse cx="220" cy="220" rx="55" ry="22" fill="#22263a" stroke="#ffc847" stroke-width="1.5"/>
+        <text x="220" y="224" text-anchor="middle" fill="#ffc847" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">Class</text>
+
+        <!-- Dependency -->
+        <ellipse cx="560" cy="130" rx="70" ry="24" fill="#22263a" stroke="#8892b0" stroke-width="1.5"/>
+        <text x="560" y="134" text-anchor="middle" fill="#8892b0" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">Dependency</text>
+
+        <!-- ArchRule -->
+        <ellipse cx="380" cy="130" rx="75" ry="24" fill="#22263a" stroke="#ff5c72" stroke-width="1.5"/>
+        <text x="380" y="134" text-anchor="middle" fill="#ff5c72" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">ArchitectureRule</text>
+
+        <!-- DataField -->
+        <ellipse cx="380" cy="220" rx="65" ry="22" fill="#22263a" stroke="#ff5c72" stroke-width="1.5"/>
+        <text x="380" y="224" text-anchor="middle" fill="#ff5c72" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">DataField</text>
+
+        <!-- Parameter -->
+        <ellipse cx="560" cy="220" rx="60" ry="22" fill="#22263a" stroke="#8892b0" stroke-width="1.5"/>
+        <text x="560" y="224" text-anchor="middle" fill="#8892b0" font-size="10" font-weight="700" font-family="Segoe UI,sans-serif">Parameter</text>
+
+        <!-- Edges with labels -->
+        <!-- Repo -> Module -->
+        <path d="M330,58 L240,112" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#garr)"/>
+        <text x="270" y="85" text-anchor="middle" fill="#2e3350" font-size="8.5" font-family="Segoe UI,sans-serif" fill="#8892b0">CONTAINS</text>
+
+        <!-- Repo -> ArchRule -->
+        <path d="M380,64 L380,106" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#garr)"/>
+        <text x="400" y="90" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">HAS_ARCHITECTURE</text>
+
+        <!-- Repo -> Dependency -->
+        <path d="M440,55 L510,112" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#garr)"/>
+        <text x="490" y="80" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">DEPENDS_ON</text>
+
+        <!-- Module -> Function -->
+        <path d="M155,148 L110,200" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#garr)"/>
+        <text x="118" y="178" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">DEFINES</text>
+
+        <!-- Module -> Class -->
+        <path d="M200,154 L215,198" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#garr)"/>
+        <text x="225" y="180" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">DEFINES</text>
+
+        <!-- Function -> Parameter -->
+        <path d="M138,215 L500,220" stroke="#2e3350" stroke-width="1.5" fill="none" marker-end="url(#garr)" stroke-dasharray="3,3"/>
+        <text x="340" y="212" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">HAS_PARAM</text>
+      </svg>
+    </div>
+    <p>Queries are written in Cypher and look up modules by file path prefix (directory-level scoping). All query results are cached with a TTL cache to avoid repeated Neo4j round trips.</p>
+  </div>
+
+  <!-- Policy Engine -->
+  <h2>3. The Policy Engine</h2>
+  <div class="concept-block">
+    <div class="tag">In-Process</div>
+    <p>The policy engine lives entirely in Python — no database needed. It ships with a default set of rules covering six categories, and can load custom profiles from YAML files.</p>
+
+    <div class="cat-list">
+      <div class="cat-card"><div class="icon">🔒</div><div class="name">SECURITY</div></div>
+      <div class="cat-card"><div class="icon">🏗️</div><div class="name">ARCHITECTURE</div></div>
+      <div class="cat-card"><div class="icon">✏️</div><div class="name">STYLE</div></div>
+      <div class="cat-card"><div class="icon">🧪</div><div class="name">TESTING</div></div>
+      <div class="cat-card"><div class="icon">⚡</div><div class="name">PERFORMANCE</div></div>
+      <div class="cat-card"><div class="icon">🛡️</div><div class="name">DATA_SENSITIVITY</div></div>
+      <div class="cat-card"><div class="icon">📦</div><div class="name">DEPENDENCY</div></div>
+    </div>
+
+    <h3>Rule Severity Levels</h3>
+    <div class="sev-row">
+      <div class="sev-card block"><div class="name">BLOCK</div><p>Must never be violated. Used for SQL injection, hardcoded secrets, plaintext passwords.</p></div>
+      <div class="sev-card warn"><div class="name">WARN</div><p>Should be followed. Used for layer boundary violations, N+1 queries, missing tests.</p></div>
+      <div class="sev-card suggest"><div class="name">SUGGEST</div><p>Best practice guidance. Used for naming conventions, async patterns, code style.</p></div>
+    </div>
+
+    <h3>Layer-Based Filtering</h3>
+    <p>Rules are filtered by the architecture layer of the target file. For example, <code>test</code> layer files only get testing rules; <code>repository</code> layer files don't receive controller-oriented architecture warnings.</p>
+  </div>
+
+  <!-- Architecture Layers -->
+  <h2>4. Architecture Layers</h2>
+  <div class="concept-block">
+    <div class="tag">Layered Architecture</div>
+    <p>ForgeLine models codebases using a standard layered architecture. It infers which layer a file belongs to either from Neo4j (authoritative) or from path patterns as a fallback.</p>
+
+    <table class="layer-table">
+      <thead>
+        <tr>
+          <th>Layer</th>
+          <th>Path Patterns</th>
+          <th>Can Import From</th>
+          <th>Cannot Import From</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>controller</td>
+          <td><code>controllers/</code> <code>routes/</code> <code>handlers/</code></td>
+          <td>service, middleware, model, util</td>
+          <td>repository</td>
+        </tr>
+        <tr>
+          <td>service</td>
+          <td><code>services/</code> <code>usecase/</code> <code>business/</code></td>
+          <td>repository, model, util</td>
+          <td>controller</td>
+        </tr>
+        <tr>
+          <td>repository</td>
+          <td><code>repositories/</code> <code>dao/</code> <code>dal/</code></td>
+          <td>model, util</td>
+          <td>controller, service</td>
+        </tr>
+        <tr>
+          <td>model</td>
+          <td><code>models/</code> <code>entities/</code> <code>schemas/</code></td>
+          <td>util</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>middleware</td>
+          <td><code>middleware/</code> <code>guards/</code></td>
+          <td>service, model, util</td>
+          <td>repository</td>
+        </tr>
+        <tr>
+          <td>util</td>
+          <td><code>utils/</code> <code>helpers/</code> <code>lib/</code></td>
+          <td>—</td>
+          <td>all layers</td>
+        </tr>
+        <tr>
+          <td>test</td>
+          <td><code>tests/</code> <code>__test__/</code> <code>*.spec.*</code></td>
+          <td>any</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Data Sensitivity -->
+  <h2>5. Data Sensitivity Classification</h2>
+  <div class="concept-block">
+    <div class="tag">Compliance</div>
+    <p>ForgeLine classifies data fields by sensitivity type and injects handling requirements directly into the AI's context. Each classification has a fixed set of constraints.</p>
+
+    <div class="tag-grid">
+      <div class="sens-tag pii">
+        <div class="label">PII</div>
+        <p>Personally Identifiable Information. Encrypt, never log, consent required.</p>
+      </div>
+      <div class="sens-tag phi">
+        <div class="label">PHI</div>
+        <p>Protected Health Info. AES-256, audit trail, BAA required for external transfer.</p>
+      </div>
+      <div class="sens-tag pci">
+        <div class="label">PCI</div>
+        <p>Payment Card Data. Never store after auth, tokenize, never log even partially.</p>
+      </div>
+      <div class="sens-tag fin">
+        <div class="label">FINANCIAL</div>
+        <p>Money amounts. Use Decimal not float, audit trail, validate before write.</p>
+      </div>
+      <div class="sens-tag cred">
+        <div class="label">CREDENTIAL</div>
+        <p>Passwords/tokens. bcrypt/argon2, never in API responses or logs.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Assembly -->
+  <h2>6. Context Assembly</h2>
+  <div class="concept-block">
+    <div class="tag">Core Orchestration</div>
+    <p>The <code>ContextBuilder</code> is the central orchestrator. When <code>get_context_for_file</code> is called, it runs these steps sequentially and assembles a <code>FileContext</code> object:</p>
+
+    <div class="diagram-container" style="margin: 1rem 0; padding: 1.25rem;">
+      <svg viewBox="0 0 700 60" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:70px">
+        <defs>
+          <marker id="sarr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#6c63ff"/>
+          </marker>
+        </defs>
+        <!-- Steps -->
+        <rect x="0" y="10" width="95" height="36" rx="6" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.5"/>
+        <text x="47" y="27" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">1. Infer Layer</text>
+        <text x="47" y="40" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">KG or path pattern</text>
+
+        <path d="M95,28 L108,28" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#sarr)"/>
+
+        <rect x="108" y="10" width="95" height="36" rx="6" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.5"/>
+        <text x="155" y="27" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">2. Load Policies</text>
+        <text x="155" y="40" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">filter by layer</text>
+
+        <path d="M203,28 L216,28" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#sarr)"/>
+
+        <rect x="216" y="10" width="100" height="36" rx="6" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.5"/>
+        <text x="266" y="27" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">3. Query Patterns</text>
+        <text x="266" y="40" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">functions + classes</text>
+
+        <path d="M316,28 L329,28" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#sarr)"/>
+
+        <rect x="329" y="10" width="105" height="36" rx="6" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.5"/>
+        <text x="381" y="27" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">4. Sensitivity</text>
+        <text x="381" y="40" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">PII/PHI/PCI fields</text>
+
+        <path d="M434,28 L447,28" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#sarr)"/>
+
+        <rect x="447" y="10" width="105" height="36" rx="6" fill="#22263a" stroke="#6c63ff" stroke-opacity="0.5"/>
+        <text x="499" y="27" text-anchor="middle" fill="#8892b0" font-size="8.5" font-family="Segoe UI,sans-serif">5. Arch Boundaries</text>
+        <text x="499" y="40" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">allowed layers</text>
+
+        <path d="M552,28 L565,28" stroke="#6c63ff" stroke-width="1.5" marker-end="url(#sarr)"/>
+
+        <rect x="565" y="10" width="120" height="36" rx="6" fill="#1a1d27" stroke="#6c63ff"/>
+        <text x="625" y="27" text-anchor="middle" fill="#6c63ff" font-size="8.5" font-weight="700" font-family="Segoe UI,sans-serif">FileContext.to_prompt</text>
+        <text x="625" y="40" text-anchor="middle" fill="#8892b0" font-size="8" font-family="Segoe UI,sans-serif">formatted markdown text</text>
+      </svg>
+    </div>
+
+    <p>Each step is independently fault-tolerant — if Neo4j is unavailable, steps 3–5 silently return empty results and the server continues with policies only. The final <code>to_prompt_context()</code> method serializes the <code>FileContext</code> into structured markdown text that gets inserted into the AI's context window.</p>
+  </div>
+
+</main>
+</body>
+</html>
