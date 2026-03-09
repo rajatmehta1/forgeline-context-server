@@ -12,8 +12,15 @@ from __future__ import annotations
 import argparse
 import sys
 
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+
 from src.server import mcp
 from src.config.settings import settings
+
+_cors_middleware = [
+    Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+]
 
 
 def main() -> None:
@@ -32,9 +39,9 @@ def main() -> None:
     if args.transport == "stdio":
         mcp.run(transport="stdio")
     elif args.transport == "streamable-http":
-        mcp.run(transport="streamable-http", host=args.host, port=args.port)
+        mcp.run(transport="streamable-http", host=args.host, port=args.port, middleware=_cors_middleware)
     elif args.transport == "sse":
-        mcp.run(transport="sse", host=args.host, port=args.port)
+        mcp.run(transport="sse", host=args.host, port=args.port, middleware=_cors_middleware)
     else:
         print(f"Unknown transport: {args.transport}", file=sys.stderr)
         sys.exit(1)

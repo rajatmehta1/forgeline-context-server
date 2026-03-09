@@ -16,6 +16,7 @@ Run:
 from __future__ import annotations
 
 import sys
+from contextlib import asynccontextmanager
 import structlog
 from fastmcp import FastMCP
 
@@ -36,6 +37,24 @@ structlog.configure(
 )
 logger = structlog.get_logger(__name__)
 
+# ─── Lifespan ───
+@asynccontextmanager
+async def lifespan(server: FastMCP):  # type: ignore[type-arg]
+    logger.info("ForgeLine Context Server starting...")
+    try:
+        await kg_service.connect()
+        logger.info("Knowledge Graph connected")
+    except Exception as e:
+        logger.warning(
+            "Knowledge Graph unavailable — running with policies only",
+            error=str(e),
+        )
+    logger.info("ForgeLine Context Server ready")
+    yield
+    await kg_service.disconnect()
+    logger.info("ForgeLine Context Server stopped")
+
+
 # ─── Initialize FastMCP Server ───
 mcp = FastMCP(
     "ForgeLine Context Server",
@@ -46,6 +65,7 @@ mcp = FastMCP(
     Always call `get_context_for_file` first to understand what policies apply
     to the file you're working on.
     """,
+    lifespan=lifespan,
 )
 
 
@@ -420,28 +440,3 @@ Now generate the code for: {task}
 """
 
 
-# ═══════════════════════════════════════════════════════════
-# LIFECYCLE — Server startup and shutdown
-# ═══════════════════════════════════════════════════════════
-
-
-@mcp.on_event("startup")
-async def on_startup() -> None:
-    """Initialize services on server start."""
-    logger.info("ForgeLine Context Server starting...")
-    try:
-        await kg_service.connect()
-        logger.info("Knowledge Graph connected")
-    except Exception as e:
-        logger.warning(
-            "Knowledge Graph unavailable — running with policies only",
-            error=str(e),
-        )
-    logger.info("ForgeLine Context Server ready")
-
-
-@mcp.on_event("shutdown")
-async def on_shutdown() -> None:
-    """Cleanup on server shutdown."""
-    await kg_service.disconnect()
-    logger.info("ForgeLine Context Server stopped")

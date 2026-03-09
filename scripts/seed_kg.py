@@ -12,7 +12,7 @@ from neo4j import AsyncGraphDatabase
 
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "forgeline-dev"
+NEO4J_PASSWORD = "neo4j-admin"
 
 
 async def seed() -> None:
