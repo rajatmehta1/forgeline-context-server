@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeLine — Local Testing Guide</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #00c9a7;
+    --danger: #ff5c72;
+    --warn: #ffc847;
+    --text: #e8eaf0;
+    --muted: #8892b0;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .logo { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  nav { margin-left: auto; display: flex; gap: 1.5rem; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+  nav a:hover, nav a.active { color: var(--accent); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+  .page-title { font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; }
+  .page-title span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 1.15rem; margin-bottom: 3rem; }
+
+  h2 { font-size: 1.5rem; font-weight: 700; margin: 3.5rem 0 0.75rem; color: var(--text); }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.5rem; color: var(--accent2); }
+  p { color: var(--muted); margin-bottom: 0.8rem; }
+
+  /* Table of contents */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem 2rem;
+  }
+  .toc-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; grid-column: 1 / -1; }
+  .toc a { color: var(--muted); text-decoration: none; font-size: 0.88rem; padding: 0.15rem 0; transition: color 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+  .toc a:hover { color: var(--accent); }
+  .toc a .num { color: var(--accent); font-size: 0.75rem; font-weight: 700; min-width: 18px; }
+
+  /* Section anchors */
+  section { scroll-margin-top: 2rem; }
+
+  /* Code blocks */
+  pre {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin: 0.9rem 0;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.83rem;
+    line-height: 1.65;
+    position: relative;
+  }
+  pre .label {
+    position: absolute; top: 8px; right: 12px;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); opacity: 0.7;
+  }
+  .kw { color: #c792ea; }
+  .str { color: #c3e88d; }
+  .cmt { color: #4a5568; font-style: italic; }
+  .key { color: #82aaff; }
+  .val { color: #f78c6c; }
+  .cmd { color: #e8eaf0; }
+  .flag { color: #ffc847; }
+  .good { color: #00c9a7; }
+  .bad { color: #ff5c72; }
+  .highlight { color: #ffc847; }
+  .cypher-kw { color: #c792ea; }
+  .cypher-id { color: #82aaff; }
+  .cypher-prop { color: #f78c6c; }
+  .cypher-str { color: #c3e88d; }
+
+  /* Expected output blocks */
+  .output-block {
+    background: #070910;
+    border: 1px solid rgba(0,201,167,0.2);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+    margin: 0.5rem 0 1.25rem;
+    font-family: 'Consolas', monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .output-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent2); margin-bottom: 0.5rem; }
+  .output-block .o-head { color: var(--accent2); font-weight: 700; }
+  .output-block .o-rule { color: var(--text); }
+  .output-block .o-good { color: var(--accent2); }
+  .output-block .o-bad { color: var(--danger); }
+  .output-block .o-warn { color: var(--warn); }
+  .output-block .o-dim { color: #3d4a5c; }
+
+  /* Test method tabs */
+  .method-tabs { display: flex; gap: 0.5rem; margin: 1.5rem 0 0; flex-wrap: wrap; }
+  .method-tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.82rem; font-weight: 600;
+    color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .method-tab .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .method-tab.inspector .dot { background: var(--accent); }
+  .method-tab.curl .dot { background: var(--accent2); }
+  .method-tab.pytest .dot { background: var(--warn); }
+
+  /* Tool test cards */
+  .tool-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    margin: 1.5rem 0;
+  }
+  .tool-section .tool-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+  .tool-section .tool-badge {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(108,99,255,0.12); color: var(--accent); border: 1px solid rgba(108,99,255,0.3);
+  }
+  .tool-section .tool-badge.resource { background: rgba(0,201,167,0.1); color: var(--accent2); border-color: rgba(0,201,167,0.3); }
+  .tool-section .tool-badge.prompt { background: rgba(255,200,71,0.1); color: var(--warn); border-color: rgba(255,200,71,0.3); }
+  .tool-section h3 { margin: 0; font-family: 'Consolas', monospace; font-size: 1rem; color: var(--text); }
+
+  /* Input/output grid */
+  .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .io-panel { }
+  .io-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; margin: 1rem 0; }
+  .checklist li { padding: 0.45rem 0; border-bottom: 1px solid rgba(46,51,80,0.5); font-size: 0.87rem; color: var(--muted); display: flex; align-items: flex-start; gap: 0.6rem; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li .chk { color: var(--accent2); font-size: 0.9rem; flex-shrink: 0; margin-top: 0.05rem; }
+  .checklist li .chk.warn { color: var(--warn); }
+  .checklist li .chk.bad { color: var(--danger); }
+
+  /* Warning / tip callouts */
+  .callout {
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    margin: 1rem 0;
+    font-size: 0.87rem;
+    display: flex; gap: 0.75rem; align-items: flex-start;
+  }
+  .callout.tip { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.25); color: var(--accent); }
+  .callout.warn { background: rgba(255,200,71,0.07); border: 1px solid rgba(255,200,71,0.25); color: var(--warn); }
+  .callout.info { background: rgba(0,201,167,0.07); border: 1px solid rgba(0,201,167,0.2); color: var(--accent2); }
+  .callout .icon { font-size: 1rem; flex-shrink: 0; }
+  .callout p { margin: 0; font-size: 0.87rem; color: inherit; }
+
+  /* Status badge */
+  .status { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 700; }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status.ok .dot { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .status.fail .dot { background: var(--danger); }
+  .status.warn .dot { background: var(--warn); }
+
+  /* Neo4j verification table */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th { text-align: left; padding: 0.55rem 1rem; font-size: 0.78rem; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 0.55rem 1rem; font-size: 0.84rem; border-bottom: 1px solid rgba(46,51,80,0.5); }
+  td:first-child { font-family: Consolas, monospace; color: var(--accent2); font-size: 0.78rem; }
+  td code { background: var(--surface2); padding: 1px 5px; border-radius: 3px; font-size: 0.78rem; color: var(--text); }
+
+  code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: var(--accent2); font-family: 'Consolas', monospace; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1rem 0; }
+
+  /* Scenario strip */
+  .scenario-strip { display: flex; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; }
+  .scenario-chip {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
+    padding: 0.3rem 0.9rem; font-size: 0.78rem; font-family: Consolas, monospace; color: var(--muted);
+  }
+  .scenario-chip.green { border-color: rgba(0,201,167,0.3); color: var(--accent2); }
+  .scenario-chip.red { border-color: rgba(255,92,114,0.3); color: var(--danger); }
+  .scenario-chip.yellow { border-color: rgba(255,200,71,0.3); color: var(--warn); }
+
+  @media (max-width: 768px) {
+    header { padding: 1.5rem; flex-wrap: wrap; }
+    .toc, .io-grid, .two-col { grid-template-columns: 1fr; }
+    .page-title { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Forge<span>Line</span></div>
+  <nav>
+    <a href="scope.html">Scope</a>
+    <a href="concepts.html">Concepts</a>
+    <a href="design.html">Design</a>
+    <a href="deploy.html">Deploy</a>
+    <a href="local_testing.html" class="active">Testing</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-title">Local <span>Testing</span> Guide</div>
+  <div class="subtitle">How to verify every tool, resource, and prompt after seeding the knowledge graph.</div>
+
+  <nav class="toc">
+    <div class="toc-title">On this page</div>
+    <a href="#preflight"><span class="num">1</span> Pre-flight Checks</a>
+    <a href="#neo4j-verify"><span class="num">2</span> Verify Neo4j Seed Data</a>
+    <a href="#inspector"><span class="num">3</span> MCP Inspector (Primary Method)</a>
+    <a href="#tools"><span class="num">4</span> Testing All 6 Tools</a>
+    <a href="#resources"><span class="num">5</span> Testing Resources</a>
+    <a href="#prompts"><span class="num">6</span> Testing Prompts</a>
+    <a href="#http"><span class="num">7</span> HTTP Mode — curl Testing</a>
+    <a href="#unit-tests"><span class="num">8</span> Running the Test Suite</a>
+    <a href="#ide-verify"><span class="num">9</span> Verifying in Cursor / Claude Code</a>
+    <a href="#troubleshoot"><span class="num">10</span> Troubleshooting</a>
+  </nav>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="preflight">
+  <h2>1. Pre-flight Checks</h2>
+  <p>Before testing individual tools, confirm all services are up and the server can start cleanly.</p>
+
+  <pre><span class="cmt"># 1. Confirm Docker services are running</span>
+<span class="cmd">docker compose ps</span>
+<span class="cmt"># Expect: forgeline-mcp, neo4j — both "Up" and healthy</span>
+
+<span class="cmt"># 2. Confirm Neo4j is reachable</span>
+<span class="cmd">curl -s http://localhost:7474/db/data/ | head -5</span>
+<span class="cmt"># Expect: JSON response with Neo4j version info</span>
+
+<span class="cmt"># 3. Start the MCP server manually to check for errors</span>
+<span class="cmd">uv run python -m src.server</span>
+<span class="cmt"># Expect in stderr:</span>
+<span class="cmt">#   Connected to Neo4j  uri=bolt://localhost:7687</span>
+<span class="cmt">#   ForgeLine Context Server ready</span></pre>
+
+  <div class="callout warn">
+    <span class="icon">⚠</span>
+    <p>If you see <strong>"Knowledge Graph unavailable — running with policies only"</strong>, the server still starts but Neo4j is unreachable. Fix the connection before testing pattern/sensitivity tools. Check <code>NEO4J_PASSWORD</code> in your <code>.env</code> — the seed script uses <code>forgeline-dev</code> as the password.</p>
+  </div>
+
+  <h3>Expected Startup Log</h3>
+  <div class="output-label">stderr output</div>
+  <div class="output-block">
+    <span class="o-good">2025-01-15T10:00:00Z</span> [info     ] ForgeLine Context Server starting...<br>
+    <span class="o-good">2025-01-15T10:00:00Z</span> [info     ] Connected to Neo4j  <span class="o-good">uri=bolt://localhost:7687</span><br>
+    <span class="o-good">2025-01-15T10:00:00Z</span> [info     ] ForgeLine Context Server ready<br>
+    <span class="o-dim">Waiting for MCP client connections...</span>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="neo4j-verify">
+  <h2>2. Verify Neo4j Seed Data</h2>
+  <p>Open the Neo4j Browser at <strong>http://localhost:7474</strong> (credentials: <code>neo4j</code> / <code>forgeline-dev</code>) and run these Cypher queries to confirm the seed script ran correctly.</p>
+
+  <div class="callout tip">
+    <span class="icon">💡</span>
+    <p>You can also run these via the Neo4j Browser's query editor. Paste each query and press <strong>Ctrl+Enter</strong> to run.</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>What to verify</th><th>Cypher query</th><th>Expected result</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Node counts</td>
+        <td><code>MATCH (n) RETURN labels(n), count(n) ORDER BY count(n) DESC</code></td>
+        <td>Module:12, Function:11, Class:6, DataField:5, Dependency:8, ArchitectureRule:3, Repository:1</td>
+      </tr>
+      <tr>
+        <td>Repository exists</td>
+        <td><code>MATCH (r:Repository) RETURN r.name</code></td>
+        <td><code>acme-saas</code></td>
+      </tr>
+      <tr>
+        <td>Functions loaded</td>
+        <td><code>MATCH (f:Function) RETURN f.name, f.is_exported LIMIT 5</code></td>
+        <td>validateEmail, hashPassword, generateJWT, etc.</td>
+      </tr>
+      <tr>
+        <td>Sensitive fields</td>
+        <td><code>MATCH (d:DataField) RETURN d.name, d.sensitivity_tag</code></td>
+        <td>email/PII, passwordHash/CREDENTIAL, card_token/PCI, amount/FINANCIAL, stripeChargeId/PCI</td>
+      </tr>
+      <tr>
+        <td>Architecture rules</td>
+        <td><code>MATCH (a:ArchitectureRule) RETURN a.layer_name, a.allowed_dependencies</code></td>
+        <td>controller, service, repository — each with their allowed layers</td>
+      </tr>
+      <tr>
+        <td>Dependencies</td>
+        <td><code>MATCH (d:Dependency) RETURN d.package_name, d.trust_score, d.is_approved</code></td>
+        <td>express(100), bcrypt(98), stripe(99), jsonwebtoken(97), etc.</td>
+      </tr>
+      <tr>
+        <td>Module-Function links</td>
+        <td><code>MATCH (m:Module)-[:DEFINES]->(f:Function) RETURN m.file_path, f.name LIMIT 5</code></td>
+        <td>src/utils/validation.ts → validateEmail, validatePassword, etc.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Full graph overview query</h3>
+  <pre><span class="cypher-kw">MATCH</span> (n)
+<span class="cypher-kw">RETURN</span> <span class="cypher-kw">labels</span>(n)[0] <span class="cypher-kw">AS</span> type, <span class="cypher-kw">count</span>(n) <span class="cypher-kw">AS</span> total
+<span class="cypher-kw">ORDER BY</span> total <span class="cypher-kw">DESC</span></pre>
+
+  <div class="output-label">expected output</div>
+  <div class="output-block">
+╒══════════════════╤═══════╕<br>
+│type              │total  │<br>
+╞══════════════════╪═══════╡<br>
+│<span class="o-good">"Module"          </span>│<span class="o-good">12     </span>│<br>
+│<span class="o-good">"Function"        </span>│<span class="o-good">11     </span>│<br>
+│<span class="o-good">"Dependency"      </span>│<span class="o-good">8      </span>│<br>
+│<span class="o-good">"Class"           </span>│<span class="o-good">6      </span>│<br>
+│<span class="o-good">"DataField"       </span>│<span class="o-good">5      </span>│<br>
+│<span class="o-good">"ArchitectureRule" </span>│<span class="o-good">3      </span>│<br>
+│<span class="o-good">"Repository"      </span>│<span class="o-good">1      </span>│<br>
+╘══════════════════╧═══════╛
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="inspector">
+  <h2>3. MCP Inspector — Primary Testing Method</h2>
+  <p>The MCP Inspector is a browser-based UI that lets you call every tool and read every resource interactively, with live JSON output. It's the fastest way to test the full surface of the server.</p>
+
+  <pre><span class="cmt"># Start the MCP Inspector (opens a browser tab automatically)</span>
+<span class="cmd">uv run mcp dev src/server.py</span>
+
+<span class="cmt"># Output will show something like:</span>
+<span class="cmt">#   MCP Inspector running at http://localhost:5173</span>
+<span class="cmt">#   Proxying to: python -m src.server</span></pre>
+
+  <div class="callout info">
+    <span class="icon">ℹ</span>
+    <p>The Inspector spawns the server as a subprocess (stdio mode) and gives you a UI to call each tool with custom arguments and see the exact text returned. No IDE setup needed.</p>
+  </div>
+
+  <h3>Inspector UI Workflow</h3>
+
+  <div class="tool-section" style="padding: 1.25rem;">
+    <ol style="color: var(--muted); font-size: 0.88rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem;">
+      <li>Open <strong style="color: var(--text)">http://localhost:5173</strong> in your browser after running the command above</li>
+      <li>The left panel shows <strong style="color: var(--text)">Tools</strong>, <strong style="color: var(--text)">Resources</strong>, and <strong style="color: var(--text)">Prompts</strong> tabs — all populated from your server's MCP schema</li>
+      <li>Click a tool name → fill in the argument fields → click <strong style="color: var(--text)">Run Tool</strong></li>
+      <li>The right panel shows the raw text response — this is exactly what an AI coding tool would receive</li>
+      <li>Check the <strong style="color: var(--text)">Server Log</strong> tab to see structlog output from the server including Neo4j query calls</li>
+    </ol>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="tools">
+  <h2>4. Testing All 6 Tools</h2>
+  <p>For each tool below: the test inputs are based on the seeded <code>acme-saas</code> data. Use these exact values to get meaningful responses.</p>
+
+  <!-- Tool 1 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge">Tool 1</span>
+      <h3>get_context_for_file</h3>
+    </div>
+    <p>The primary tool. Tests that the full context assembly pipeline works end-to-end — layer inference, policy lookup, pattern query, sensitivity query, and architecture boundaries all in one call.</p>
+
+    <h3>Test inputs to try</h3>
+    <div class="scenario-strip">
+      <span class="scenario-chip green">src/services/payment.service.ts</span>
+      <span class="scenario-chip green">src/controllers/auth.controller.ts</span>
+      <span class="scenario-chip green">src/repositories/user.repository.ts</span>
+      <span class="scenario-chip green">src/utils/encryption.ts</span>
+      <span class="scenario-chip yellow">src/unknown/newfile.ts (unknown layer)</span>
+    </div>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Inspector / curl input</div>
+        <pre style="margin: 0;"><span class="key">file_path</span>: <span class="str">"src/services/payment.service.ts"</span>
+<span class="key">repo_name</span>: <span class="str">"acme-saas"</span>
+<span class="key">profile_id</span>: <span class="str">"default"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected response (truncated)</div>
+        <div class="output-block" style="margin: 0; height: 100%;">
+<span class="o-head"># ForgeLine Governance Context</span><br>
+<span class="o-good">**File:** `src/services/payment.service.ts`</span><br>
+<span class="o-good">**Layer:** service | **Language:** typescript</span><br>
+---<br>
+<br>
+<span class="o-head">## Security Requirements</span><br>
+<span class="o-rule">- NEVER build SQL queries with string concat...</span><br>
+<span class="o-rule">- ALWAYS hash passwords with bcrypt...</span><br>
+<br>
+<span class="o-head">## Existing Functions (REUSE these)</span><br>
+<span class="o-rule">- `processPayment(userId, amount, token)` in src/services/payment.service.ts</span><br>
+<br>
+<span class="o-head">## Data Sensitivity Rules</span><br>
+<span class="o-rule">- `card_token` [PCI]: Never store after auth...</span><br>
+<span class="o-rule">- `amount` [FINANCIAL]: Use Decimal not float...
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Response header shows correct <strong>Layer: service</strong> and <strong>Language: typescript</strong></li>
+      <li><span class="chk">✓</span> Security section lists at least 5 rules (SEC-001 through SEC-005)</li>
+      <li><span class="chk">✓</span> "Existing Functions" section shows <code>processPayment</code> from the seeded data</li>
+      <li><span class="chk">✓</span> Data Sensitivity section shows <code>card_token [PCI]</code> and <code>amount [FINANCIAL]</code></li>
+      <li><span class="chk">✓</span> Architecture section says service layer MUST NOT import from: controller</li>
+      <li><span class="chk">✓</span> Server log (stderr) shows: <code>Building context</code>, <code>Resolved layer</code>, <code>Context built</code></li>
+    </ul>
+
+    <div class="callout tip">
+      <span class="icon">💡</span>
+      <p>Try with <code>file_path: "src/unknown/newfile.ts"</code> and no <code>repo_name</code>. You should still get security and style rules (from the policy engine) even though Neo4j has no record of this file — this confirms graceful fallback works.</p>
+    </div>
+  </div>
+
+  <!-- Tool 2 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge">Tool 2</span>
+      <h3>get_security_rules</h3>
+    </div>
+    <p>Tests that the policy engine returns correctly filtered security rules per layer without touching Neo4j.</p>
+
+    <h3>Test inputs to try</h3>
+    <div class="scenario-strip">
+      <span class="scenario-chip green">layer: "controller"</span>
+      <span class="scenario-chip green">layer: "service"</span>
+      <span class="scenario-chip green">layer: "repository"</span>
+      <span class="scenario-chip yellow">layer: "test" (should return only test rules)</span>
+    </div>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Input</div>
+        <pre style="margin: 0;"><span class="key">layer</span>: <span class="str">"controller"</span>
+<span class="key">profile_id</span>: <span class="str">"default"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected response</div>
+        <div class="output-block" style="margin: 0; height: 100%;">
+<span class="o-head"># Security Rules for 'controller' layer</span><br>
+<br>
+<span class="o-head">## [BLOCK] Parameterized Queries Required</span><br>
+<span class="o-rule">NEVER build SQL queries with string concatenation...</span><br>
+<span class="o-good">✅ Good: `db.execute('SELECT * FROM users WHERE id = ?', ...)`</span><br>
+<span class="o-bad">❌ Bad: `f"SELECT * FROM users WHERE id = {user_id}"`</span><br>
+<br>
+<span class="o-head">## [BLOCK] No eval() or exec()</span><br>
+<span class="o-rule">NEVER use eval(), exec(), Function()...</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Returns 6 rules for "controller" layer (SEC-001 through SEC-006)</li>
+      <li><span class="chk">✓</span> Each rule shows severity [BLOCK] or [WARN], name, constraint text, good and bad examples</li>
+      <li><span class="chk">✓</span> "test" layer returns a message like "No specific security rules" (test layer only gets testing rules)</li>
+      <li><span class="chk">✓</span> No Neo4j calls made — check server log shows no KG queries</li>
+    </ul>
+  </div>
+
+  <!-- Tool 3 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge">Tool 3</span>
+      <h3>get_existing_patterns</h3>
+    </div>
+    <p>Tests the Neo4j pattern query. This is the most critical KG-dependent tool to verify.</p>
+
+    <h3>Test inputs to try</h3>
+    <div class="scenario-strip">
+      <span class="scenario-chip green">src/utils/encryption.ts</span>
+      <span class="scenario-chip green">src/repositories/user.repository.ts</span>
+      <span class="scenario-chip green">src/services/auth.service.ts</span>
+      <span class="scenario-chip red">src/nonexistent/file.ts (no results expected)</span>
+    </div>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Input</div>
+        <pre style="margin: 0;"><span class="key">file_path</span>: <span class="str">"src/utils/encryption.ts"</span>
+<span class="key">repo_name</span>: <span class="str">"acme-saas"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected response</div>
+        <div class="output-block" style="margin: 0; height: 100%;">
+<span class="o-head"># Existing Code Patterns — REUSE these</span><br>
+<br>
+<span class="o-head">## Functions</span><br>
+<span class="o-rule">- `encryptField(data: string, key?: string): string`</span><br>
+<span class="o-dim">  → src/utils/encryption.ts</span><br>
+<span class="o-dim">  Purpose: AES-256 encryption for sensitive fields</span><br>
+<span class="o-rule">- `hashPassword(password: string): Promise&lt;string&gt;`</span><br>
+<span class="o-dim">  → src/utils/encryption.ts</span><br>
+<span class="o-dim">  Purpose: Hashes password with bcrypt (12 rounds)</span><br>
+<span class="o-rule">- `comparePassword(plain, hashed): Promise&lt;boolean&gt;`</span><br>
+<span class="o-dim">  → src/utils/encryption.ts</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Returns <code>encryptField</code>, <code>hashPassword</code>, <code>comparePassword</code> for the utils/encryption.ts path</li>
+      <li><span class="chk">✓</span> Each function shows its full signature and description</li>
+      <li><span class="chk">✓</span> For <code>src/repositories/user.repository.ts</code>: returns <code>findUserById</code>, <code>findUserByEmail</code>, <code>createUser</code> and the <code>UserRepository</code> class with its methods</li>
+      <li><span class="chk">✓</span> For a non-existent path: returns "No existing patterns found near..." gracefully</li>
+      <li><span class="chk">✓</span> Second call with the same path is faster (cache hit) — verify with <code>LOG_LEVEL=DEBUG</code></li>
+    </ul>
+  </div>
+
+  <!-- Tool 4 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge">Tool 4</span>
+      <h3>get_architecture_map</h3>
+    </div>
+    <p>Tests that architecture boundary rules are loaded from Neo4j and displayed correctly.</p>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Input</div>
+        <pre style="margin: 0;"><span class="key">repo_name</span>: <span class="str">"acme-saas"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected response</div>
+        <div class="output-block" style="margin: 0; height: 100%;">
+<span class="o-head"># Architecture Boundaries</span><br>
+Follow these rules for all imports and function calls:<br>
+<br>
+<span class="o-head">## Layer: controller</span><br>
+Path pattern: `**/controllers/**`<br>
+<span class="o-good">✅ CAN import from: service, middleware, model, util</span><br>
+<span class="o-bad">❌ MUST NOT import from: repository</span><br>
+<br>
+<span class="o-head">## Layer: service</span><br>
+Path pattern: `**/services/**`<br>
+<span class="o-good">✅ CAN import from: repository, model, util</span><br>
+<span class="o-bad">❌ MUST NOT import from: controller</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Returns 3 layers: controller, service, repository</li>
+      <li><span class="chk">✓</span> Each layer shows path pattern, allowed, and forbidden lists</li>
+      <li><span class="chk">✓</span> Try with <code>repo_name: ""</code> (empty) — should return the default hardcoded boundaries as a fallback</li>
+    </ul>
+  </div>
+
+  <!-- Tool 5 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge">Tool 5</span>
+      <h3>check_dependency</h3>
+    </div>
+    <p>Tests the dependency trust scoring. Try approved packages, unknown packages, and simulate a phantom (hallucinated) package.</p>
+
+    <h3>Test scenarios</h3>
+    <div class="scenario-strip">
+      <span class="scenario-chip green">express (approved, trust 100)</span>
+      <span class="scenario-chip green">bcrypt (approved, trust 98)</span>
+      <span class="scenario-chip yellow">axios (approved but has 2 CVEs)</span>
+      <span class="scenario-chip red">made-up-package-xyz (not in KG)</span>
+    </div>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Input — approved package</div>
+        <pre style="margin: 0;"><span class="key">package_name</span>: <span class="str">"bcrypt"</span></pre>
+
+        <div class="io-label" style="margin-top: 1rem;">Input — unknown package</div>
+        <pre style="margin: 0;"><span class="key">package_name</span>: <span class="str">"made-up-package-xyz"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected — bcrypt</div>
+        <div class="output-block" style="margin: 0 0 0.75rem;">
+<span class="o-head"># Dependency Check: `bcrypt`</span><br>
+Trust Score: 98/100<br>
+Approved: <span class="o-good">✅ Yes</span><br>
+<br>
+<span class="o-good">✅ Package is approved and trusted. Safe to use.</span>
+        </div>
+        <div class="io-label">Expected — unknown package</div>
+        <div class="output-block" style="margin: 0;">
+<span class="o-head"># Dependency Check: `made-up-package-xyz`</span><br>
+<span class="o-warn">⚠️ UNKNOWN PACKAGE — Not found in ForgeLine's Knowledge Graph.</span><br>
+Verify it exists on the package registry before using.<br>
+Trust Score: 0/100<br>
+Approved: <span class="o-bad">❌ No</span><br>
+<br>
+<span class="o-bad">🚨 LOW TRUST — Do not use without explicit team approval.</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> <code>express</code>, <code>bcrypt</code>, <code>stripe</code>, <code>zod</code> all return approved + high trust</li>
+      <li><span class="chk">✓</span> <code>axios</code> returns approved but shows "⚠️ Known CVEs: 2"</li>
+      <li><span class="chk">✓</span> An unknown package returns the LOW TRUST / UNKNOWN warning</li>
+      <li><span class="chk">✓</span> To simulate a PHANTOM, manually set <code>is_phantom: true</code> in Neo4j for a test package, then query it — the response should show 🚨 PHANTOM PACKAGE DETECTED</li>
+    </ul>
+  </div>
+
+  <!-- Tool 6 -->
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge">Tool 6</span>
+      <h3>get_data_sensitivity</h3>
+    </div>
+    <p>Tests that sensitive field classifications from Neo4j are correctly returned with their handling constraints.</p>
+
+    <h3>Test inputs to try</h3>
+    <div class="scenario-strip">
+      <span class="scenario-chip green">src/models/user.model.ts (email, passwordHash)</span>
+      <span class="scenario-chip green">src/services/payment.service.ts (card_token, amount)</span>
+      <span class="scenario-chip green">src/models/payment.model.ts (amount, stripeChargeId)</span>
+    </div>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Input</div>
+        <pre style="margin: 0;"><span class="key">file_path</span>: <span class="str">"src/models/user.model.ts"</span>
+<span class="key">repo_name</span>: <span class="str">"acme-saas"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected response</div>
+        <div class="output-block" style="margin: 0; height: 100%;">
+<span class="o-head"># Data Sensitivity Rules</span><br>
+Handle these fields according to their classification:<br>
+<br>
+<span class="o-head">## `email` [PII]</span><br>
+<span class="o-rule">  - Must be encrypted at rest and in transit</span><br>
+<span class="o-rule">  - Never write to application logs</span><br>
+<span class="o-rule">  - Require user consent before processing</span><br>
+<br>
+<span class="o-head">## `passwordHash` [CREDENTIAL]</span><br>
+<span class="o-rule">  - Never store in plaintext</span><br>
+<span class="o-rule">  - Use bcrypt/argon2 (salt rounds &gt;= 12)</span><br>
+<span class="o-rule">  - Never include in API responses</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> <code>src/models/user.model.ts</code> returns <code>email [PII]</code> and <code>passwordHash [CREDENTIAL]</code> with correct constraints</li>
+      <li><span class="chk">✓</span> <code>src/services/payment.service.ts</code> returns <code>card_token [PCI]</code> with "PCI-DSS: Never store after authorization"</li>
+      <li><span class="chk">✓</span> <code>src/models/payment.model.ts</code> returns <code>amount [FINANCIAL]</code> and <code>stripeChargeId [PCI]</code></li>
+      <li><span class="chk">✓</span> A path with no sensitive fields (e.g., <code>src/utils/validation.ts</code>) returns "No sensitive data fields found near..."</li>
+    </ul>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="resources">
+  <h2>5. Testing Resources</h2>
+  <p>Resources are read via their URI in the MCP Inspector's <strong>Resources</strong> tab. Click the URI to read the document.</p>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge resource">Resource</span>
+      <h3>forgeline://policies/active</h3>
+    </div>
+    <p>Should return all 14 default policy rules organized by category.</p>
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Document header shows: <strong>ForgeLine Active Policies (ForgeLine Default Profile)</strong></li>
+      <li><span class="chk">✓</span> Shows <strong>Total rules: 14</strong></li>
+      <li><span class="chk">✓</span> Sections: SECURITY (6 rules), ARCHITECTURE (2), STYLE (2), TESTING (1), PERFORMANCE (2)</li>
+      <li><span class="chk">✓</span> Each rule shows rule_id, severity tag, name, and full constraint text</li>
+    </ul>
+  </div>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge resource">Resource</span>
+      <h3>forgeline://architecture/graph</h3>
+    </div>
+    <p>Should return the architecture boundaries from Neo4j for the <code>acme-saas</code> repo.</p>
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Shows all 3 layers (controller, service, repository) with path patterns</li>
+      <li><span class="chk">✓</span> If Neo4j is down, returns: "Architecture graph unavailable. Using default layered architecture rules."</li>
+    </ul>
+  </div>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge resource">Resource</span>
+      <h3>forgeline://standards/style-guide</h3>
+    </div>
+    <p>Should return the STYLE-category policy rules formatted as a coding standards document.</p>
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Shows <strong>Consistent Naming Conventions</strong> and <strong>Async/Await Consistency</strong></li>
+      <li><span class="chk">✓</span> No Neo4j calls made — pure policy engine output</li>
+    </ul>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="prompts">
+  <h2>6. Testing Prompts</h2>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <span class="tool-badge prompt">Prompt</span>
+      <h3>code_with_governance</h3>
+    </div>
+    <p>In the MCP Inspector's <strong>Prompts</strong> tab, select <code>code_with_governance</code> and fill in the args.</p>
+
+    <div class="io-grid">
+      <div class="io-panel">
+        <div class="io-label">Input args</div>
+        <pre style="margin: 0;"><span class="key">task</span>:      <span class="str">"user registration API endpoint"</span>
+<span class="key">file_path</span>: <span class="str">"src/controllers/user.controller.ts"</span>
+<span class="key">language</span>:  <span class="str">"typescript"</span></pre>
+      </div>
+      <div class="io-panel">
+        <div class="io-label">Expected rendered prompt</div>
+        <div class="output-block" style="margin: 0; height: 100%;">
+You are writing <span class="o-good">typescript</span> code for the file<br>
+`src/controllers/user.controller.ts`.<br>
+<br>
+TASK: <span class="o-good">user registration API endpoint</span><br>
+<br>
+BEFORE writing any code, you MUST:<br>
+1. Call `get_context_for_file(...)`<br>
+2. Call `get_existing_patterns(...)`<br>
+3. Call `check_dependency(...)` for new packages<br>
+<br>
+RULES:<br>
+- Follow ALL security rules from the context<br>
+- REUSE existing functions and classes<br>
+...
+        </div>
+      </div>
+    </div>
+
+    <h3>What to verify</h3>
+    <ul class="checklist">
+      <li><span class="chk">✓</span> The rendered prompt contains the task description, file path, and language</li>
+      <li><span class="chk">✓</span> The three mandatory pre-generation tool calls are listed</li>
+      <li><span class="chk">✓</span> The prompt ends with the task instruction</li>
+    </ul>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="http">
+  <h2>7. HTTP Mode — curl Testing</h2>
+  <p>Switch to HTTP transport to test via curl. This mode is also how the Docker-deployed server works.</p>
+
+  <pre><span class="cmt"># Start in HTTP mode</span>
+<span class="cmd">uv run python -m src.server --transport streamable-http --port 8000</span>
+<span class="cmt"># Or via env var:</span>
+<span class="cmd">TRANSPORT=streamable-http uv run python -m src.server</span></pre>
+
+  <h3>List available tools (MCP initialize)</h3>
+  <pre><span class="cmd">curl -s -X POST http://localhost:8000/mcp \</span>
+  <span class="flag">-H</span> <span class="str">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="str">'{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'</span> | python -m json.tool</pre>
+
+  <div class="output-label">expected — 6 tools returned</div>
+  <div class="output-block">
+{<br>
+  <span class="o-good">"result"</span>: {<br>
+    <span class="o-good">"tools"</span>: [<br>
+      { <span class="o-good">"name"</span>: <span class="o-good">"get_context_for_file"</span>, ... },<br>
+      { <span class="o-good">"name"</span>: <span class="o-good">"get_security_rules"</span>, ... },<br>
+      { <span class="o-good">"name"</span>: <span class="o-good">"get_existing_patterns"</span>, ... },<br>
+      { <span class="o-good">"name"</span>: <span class="o-good">"get_architecture_map"</span>, ... },<br>
+      { <span class="o-good">"name"</span>: <span class="o-good">"check_dependency"</span>, ... },<br>
+      { <span class="o-good">"name"</span>: <span class="o-good">"get_data_sensitivity"</span>, ... }<br>
+    ]<br>
+  }<br>
+}
+  </div>
+
+  <h3>Call a tool via curl</h3>
+  <pre><span class="cmd">curl -s -X POST http://localhost:8000/mcp \</span>
+  <span class="flag">-H</span> <span class="str">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="str">'{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "get_context_for_file",
+      "arguments": {
+        "file_path": "src/services/payment.service.ts",
+        "repo_name": "acme-saas"
+      }
+    }
+  }'</span> | python -m json.tool</pre>
+
+  <h3>Call check_dependency via curl</h3>
+  <pre><span class="cmd">curl -s -X POST http://localhost:8000/mcp \</span>
+  <span class="flag">-H</span> <span class="str">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="str">'{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "check_dependency",
+      "arguments": { "package_name": "express" }
+    }
+  }'</span></pre>
+
+  <h3>Read a resource via curl</h3>
+  <pre><span class="cmd">curl -s -X POST http://localhost:8000/mcp \</span>
+  <span class="flag">-H</span> <span class="str">"Content-Type: application/json"</span> \
+  <span class="flag">-d</span> <span class="str">'{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "resources/read",
+    "params": { "uri": "forgeline://policies/active" }
+  }'</span> | python -m json.tool</pre>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="unit-tests">
+  <h2>8. Running the Test Suite</h2>
+  <p>The unit tests in <code>tests/test_core.py</code> run entirely without Neo4j and cover the policy engine, layer inference, and context model. Run these to confirm the in-process logic is working.</p>
+
+  <pre><span class="cmt"># Run all tests</span>
+<span class="cmd">uv run pytest tests/ -v</span>
+
+<span class="cmt"># Run a specific class</span>
+<span class="cmd">uv run pytest tests/test_core.py::TestPolicyService -v</span>
+<span class="cmd">uv run pytest tests/test_core.py::TestLayerInference -v</span>
+<span class="cmd">uv run pytest tests/test_core.py::TestFileContext -v</span>
+
+<span class="cmt"># Run a single test</span>
+<span class="cmd">uv run pytest tests/test_core.py::TestLayerInference::test_controller_detection -v</span></pre>
+
+  <div class="output-label">expected output — all green</div>
+  <div class="output-block">
+<span class="o-dim">========================= test session starts ==========================</span><br>
+collected 17 items<br>
+<br>
+tests/test_core.py::<span class="o-good">TestPolicyService::test_default_profile_exists</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestPolicyService::test_security_rules_exist</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestPolicyService::test_architecture_rules_exist</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestPolicyService::test_test_layer_gets_test_rules_only</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestPolicyService::test_constraint_texts_are_nonempty</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestPolicyService::test_unknown_profile_falls_back_to_default</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestLayerInference::test_controller_detection</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestLayerInference::test_service_detection</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestLayerInference::test_repository_detection</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestLayerInference::test_model_detection</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestLayerInference::test_test_detection</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestLayerInference::test_unknown_path</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestFileContext::test_empty_context_generates_empty_string</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestFileContext::test_security_rules_in_prompt</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestFileContext::test_sensitive_fields_in_prompt</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestFileContext::test_approved_packages_in_prompt</span> PASSED<br>
+tests/test_core.py::<span class="o-good">TestFileContext::test_language_detection</span> PASSED<br>
+<br>
+<span class="o-good">========================== 17 passed in 0.42s ==========================</span>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="ide-verify">
+  <h2>9. Verifying in Cursor / Claude Code</h2>
+  <p>After configuring the MCP server in your IDE (see <a href="deploy.html" style="color: var(--accent);">deploy.html</a>), verify it's working end-to-end with real AI interactions.</p>
+
+  <h3>In Cursor</h3>
+  <div class="tool-section" style="padding: 1.25rem;">
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Open <strong>Settings → MCP</strong> and confirm <code>forgeline</code> shows a green connected indicator</li>
+      <li><span class="chk">✓</span> Open any TypeScript file, type a prompt: <em>"Write a payment processing function for this service file"</em></li>
+      <li><span class="chk">✓</span> Watch Cursor's tool use panel — you should see <code>get_context_for_file</code> being called automatically</li>
+      <li><span class="chk">✓</span> The AI's response should reference your security rules and mention existing functions to reuse</li>
+    </ul>
+  </div>
+
+  <h3>In Claude Code</h3>
+  <div class="tool-section" style="padding: 1.25rem;">
+    <ul class="checklist">
+      <li><span class="chk">✓</span> Run: <code>claude mcp list</code> — verify <code>forgeline</code> appears with status "connected"</li>
+      <li><span class="chk">✓</span> Ask: <em>"What governance rules apply to src/services/payment.service.ts?"</em></li>
+      <li><span class="chk">✓</span> Claude should invoke <code>get_context_for_file</code> and return the full governance context from your server</li>
+      <li><span class="chk">✓</span> Ask: <em>"Is lodash an approved package?"</em> — Claude should call <code>check_dependency("lodash")</code></li>
+    </ul>
+  </div>
+
+  <div class="callout tip">
+    <span class="icon">💡</span>
+    <p>Use the <code>code_with_governance</code> prompt template to force the AI to call all three primary tools before generating any code. In Claude Code: <em>"Use the code_with_governance prompt to write a user registration endpoint at src/controllers/auth.controller.ts"</em></p>
+  </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ -->
+  <section id="troubleshoot">
+  <h2>10. Troubleshooting</h2>
+
+  <div class="two-col">
+    <div class="tool-section" style="padding: 1.25rem;">
+      <h3 style="color: var(--danger);">Tools return empty patterns</h3>
+      <ul class="checklist">
+        <li><span class="chk warn">→</span> Neo4j not seeded — run <code>python scripts/seed_kg.py</code></li>
+        <li><span class="chk warn">→</span> Wrong password in <code>.env</code> — seed uses <code>forgeline-dev</code></li>
+        <li><span class="chk warn">→</span> <code>repo_name</code> mismatch — seed data uses <code>acme-saas</code></li>
+        <li><span class="chk warn">→</span> File path doesn't match seed prefix — use <code>src/</code> not absolute paths</li>
+      </ul>
+    </div>
+    <div class="tool-section" style="padding: 1.25rem;">
+      <h3 style="color: var(--danger);">Server fails to start</h3>
+      <ul class="checklist">
+        <li><span class="chk warn">→</span> Check <code>uv sync</code> ran successfully</li>
+        <li><span class="chk warn">→</span> MCP stdio mode: ensure no <code>print()</code> calls in server (breaks protocol) — all output must be <code>structlog</code> to stderr</li>
+        <li><span class="chk warn">→</span> Port 8000 in use (HTTP mode) — change <code>SERVER_PORT</code></li>
+        <li><span class="chk warn">→</span> Python version — requires 3.11+: <code>python --version</code></li>
+      </ul>
+    </div>
+    <div class="tool-section" style="padding: 1.25rem;">
+      <h3 style="color: var(--danger);">IDE not calling tools</h3>
+      <ul class="checklist">
+        <li><span class="chk warn">→</span> Restart the IDE after changing MCP config</li>
+        <li><span class="chk warn">→</span> Check the path in <code>--directory</code> is the absolute path to this repo</li>
+        <li><span class="chk warn">→</span> Verify <code>uv</code> is on your PATH: <code>which uv</code></li>
+        <li><span class="chk warn">→</span> Check IDE MCP logs for subprocess errors</li>
+      </ul>
+    </div>
+    <div class="tool-section" style="padding: 1.25rem;">
+      <h3 style="color: var(--danger);">get_data_sensitivity returns nothing</h3>
+      <ul class="checklist">
+        <li><span class="chk warn">→</span> The Cypher query uses a <code>UNION</code> — both branches must work</li>
+        <li><span class="chk warn">→</span> Check DataField nodes exist: <code>MATCH (d:DataField) RETURN count(d)</code></li>
+        <li><span class="chk warn">→</span> DataField's <code>source_module</code> must start with the directory prefix of the requested file path</li>
+        <li><span class="chk warn">→</span> Confirm <code>sensitivity_tag &lt;&gt; 'NONE'</code> — seeded fields have PII/PCI/etc.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Enable debug logging</h3>
+  <pre><span class="cmt"># See every Neo4j query and cache hit/miss</span>
+<span class="cmd">LOG_LEVEL=DEBUG uv run python -m src.server</span>
+
+<span class="cmt"># Or in your .env:</span>
+<span class="key">LOG_LEVEL</span>=<span class="str">DEBUG</span></pre>
+
+  <h3>Manually test Neo4j connection from Python</h3>
+  <pre><span class="kw">from</span> neo4j <span class="kw">import</span> AsyncGraphDatabase
+<span class="kw">import</span> asyncio
+
+<span class="kw">async def</span> test():
+    driver = AsyncGraphDatabase.driver(
+        <span class="str">"bolt://localhost:7687"</span>,
+        auth=(<span class="str">"neo4j"</span>, <span class="str">"forgeline-dev"</span>)
+    )
+    <span class="kw">async with</span> driver.session() <span class="kw">as</span> s:
+        result = <span class="kw">await</span> s.run(<span class="str">"MATCH (n) RETURN count(n) AS total"</span>)
+        data = <span class="kw">await</span> result.single()
+        print(<span class="str">f"Total nodes: {data['total']}"</span>)  <span class="cmt"># Should be 36</span>
+    <span class="kw">await</span> driver.close()
+
+asyncio.run(test())</pre>
+  </section>
+
+</main>
+</body>
+</html>
